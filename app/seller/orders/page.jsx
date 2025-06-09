@@ -2,13 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { assets, orderDummyData } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
 
 const Orders = () => {
 
-    const { currency } = useAppContext();
+     const currency = process.env.NEXT_PUBLIC_CURRENCY;
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
