@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import { useRouter,useParams } from "next/navigation";
 import Loading from "@/components/Loading";
-import { useAppContext } from "@/context/AppContext";
 import React from "react";
 import { useSelector,useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { assets, productsDummyData } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
 import { useRouter } from "next/navigation";
