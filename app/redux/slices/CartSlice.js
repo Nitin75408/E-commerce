@@ -13,7 +13,6 @@ const cartSlice = createSlice({
       const product = action.payload;
       const id = product._id;
       if (!id) return;
-
       state.items[id] = (state.items[id] || 0) + 1;
     },
 
@@ -28,6 +27,7 @@ const cartSlice = createSlice({
 
      setCartItem: (state,action) => {
       state.items = action.payload;
+      console.log(state.items);
     },
   },
 });

@@ -9,17 +9,43 @@ import { useSelector, useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 
 const Cart = () => {
   const router = useRouter();
   const products = useSelector(state => state.products.items || []);
-  console.log( " this is  cart :", products);
   const cartItems = useSelector(state => state.cart.items || {});
-  console.log("this is cart item" ,cartItems);
+  console.log(cartItems)
   const getCartCount = useSelector(selectCartCount);
-  console.log(getCartCount);
   const dispatch = useDispatch();
+    const { getToken } = useAuth();
+
+  const handleQuantityChange = (id, qty) => {
+    dispatch(updateCartQuantity({ id: id, quantity: qty }));
+  }
+
+useEffect(() => {
+  const updateCartInDB = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await saveCartToDB(token, cartItems);
+      console.log("🛒 Cart synced to DB");
+    } catch (err) {
+      console.error("❌ Failed to update cart in DB:", err.message);
+    }
+  };
+
+  // Prevent unnecessary calls (e.g., if cart is empty)
+  if (Object.keys(cartItems).length > 0) {
+    updateCartInDB();
+  }
+}, [cartItems]);
+
 
   return (
     <>
@@ -64,7 +90,7 @@ const Cart = () => {
                           </div>
                           <button
                             className="md:hidden text-xs text-orange-600 mt-1"
-                            onClick={() => dispatch(updateCartQuantity({ id: product._id, quantity: 0 }))}
+                            onClick={() => { handleQuantityChange(product._id, 0) }}
                           >
                             Remove
                           </button>
@@ -73,7 +99,7 @@ const Cart = () => {
                           <p className="text-gray-800">{product.name}</p>
                           <button
                             className="text-xs text-orange-600 mt-1"
-                            onClick={() => dispatch(updateCartQuantity({ id: product._id, quantity: 0 }))}
+                            onClick={() => { handleQuantityChange(product._id, 0) }}
                           >
                             Remove
                           </button>
@@ -83,7 +109,7 @@ const Cart = () => {
                       <td className="py-4 md:px-4 px-1">
                         <div className="flex items-center md:gap-2 gap-1">
                           <button
-                            onClick={() => dispatch(updateCartQuantity({ id: product._id, quantity: cartItems[itemId] - 1 }))}
+                            onClick={() => handleQuantityChange(product._id, cartItems[product._id] - 1)}
                           >
                             <Image
                               src={assets.decrease_arrow}
@@ -94,12 +120,12 @@ const Cart = () => {
                           <input
                             type="number"
                             value={cartItems[itemId]}
-                            onChange={e =>
-                              dispatch(updateCartQuantity({ id: product._id, quantity: Number(e.target.value) }))
-                            }
+                            onChange={(e) => {
+                              handleQuantityChange(product._id, Number(e.target.value))
+                            }}
                             className="w-8 border text-center appearance-none"
                           />
-                          <button onClick={() => dispatch(addToCart(product))}>
+                          <button onClick={() => handleQuantityChange(product._id, cartItems[product._id] + 1)}>
                             <Image
                               src={assets.increase_arrow}
                               alt="increase_arrow"
@@ -136,5 +162,5 @@ const Cart = () => {
   );
 };
 
-export default dynamic (() => Promise.resolve(Cart), {ssr: false})
+export default dynamic(() => Promise.resolve(Cart), { ssr: false })
 

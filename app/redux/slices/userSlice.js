@@ -4,8 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   user: null,
   userData: null,
-  isSeller: true,
-   token: null,
+  isSeller: false,
 };
 
 const userSlice = createSlice({
@@ -19,6 +18,7 @@ const userSlice = createSlice({
       state.userData = action.payload;
     },
     setIsSeller: (state, action) => {
+      console.log(action);
       state.isSeller = action.payload
     },
   },

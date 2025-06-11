@@ -14,9 +14,8 @@ const Navbar = () => {
   const [mounted, setMounted] = useState(false);
   const dispatch = useDispatch();
   const isSeller = useSelector((state) => state.user.isSeller)
-  const { isSignedIn } = useUser();
+  const { isSignedIn,isLoaded ,user } = useUser();
   const { openSignIn, signOut } = useClerk();
-  const user = useUser();
   const { fetchUserData } = useFetchUserData();
   const { fetchProductData } = useFetchProductData();
 
@@ -24,8 +23,11 @@ const Navbar = () => {
   const router = useRouter();
 
   useEffect(() => {
-        fetchUserData();
-        fetchProductData();
+       if(user){
+           fetchUserData();
+           fetchProductData();
+       }
+      
     }, [user]);
 
     useEffect(() => {
@@ -55,7 +57,7 @@ const Navbar = () => {
           Contact
         </Link>
 
-        {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
+        {isSeller ? <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button> :null}
 
       </div>
 

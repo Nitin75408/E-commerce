@@ -11,12 +11,8 @@ export const useFetchProductData = () => {
     const { user } = useUser();
     const dispatch = useDispatch();
 
-    const fetchProductData = async () => {
-        if (user) {
-          
-        }
-
-        try {
+    const fetchProductData = async () => { 
+       try {
             const token = await getToken();
             const data = await getProductDataFromApi(token)
             if (data.success) {
