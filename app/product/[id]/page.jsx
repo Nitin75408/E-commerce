@@ -11,11 +11,15 @@ import React from "react";
 import { useSelector,useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
 import { setProducts } from "@/app/redux/slices/ProductSlice";
+import { useUser } from "@clerk/nextjs";
+import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
+
 
 const Product = () => {
 
     const { id } = useParams();
     const  dispatch = useDispatch();
+
 
     const router = useRouter();
     const products = useSelector(state=>(state.products.items));
@@ -28,13 +32,13 @@ const handleSetcartitems = (product)=>{
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
 
-    const fetchProductData = async () => {
+    const fetchProduct = async () => {
         const product = products.find(product => product._id === id);
         setProductData(product);
     }
 
     useEffect(() => {
-        fetchProductData();
+        fetchProduct();
     }, [id, products.length])
 
     return productData ? (<>

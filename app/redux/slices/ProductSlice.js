@@ -1,14 +1,15 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { productsDummyData } from '@/assets/assets';
 
 const productSlice = createSlice({
   name: 'products',
   initialState: {
-    items: productsDummyData,
+    items: [],
   },
   reducers: {
     setProducts: (state, action) => {
       state.items = action.payload;
+      console.log(state.items);
     },
   },
 });

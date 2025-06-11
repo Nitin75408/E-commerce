@@ -2,9 +2,13 @@
 import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
 
 const AddProduct = () => {
-
+  const {getToken} = useAuth();
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -12,10 +16,43 @@ const AddProduct = () => {
   const [price, setPrice] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  };
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('description', description);
+  formData.append('category', category);
+  formData.append('price', price);
+  formData.append('offerPrice', offerPrice);
+
+  for (let i = 0; i < files.length; i++) {
+    formData.append('images', files[i]);
+  }
+
+  try {
+    const token = await getToken();
+    const { data } = await axios.post('/api/product/add', formData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log(data);
+
+    if (data.success) {
+      toast.success(data.message);
+      setFiles([]);
+      setName('');
+      setDescription('');
+      setCategory('Earphone');
+      setPrice('');
+      setOfferPrice('');
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message);
+  } 
+};
 
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">

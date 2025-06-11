@@ -5,6 +5,7 @@ const initialState = {
   user: null,
   userData: null,
   isSeller: true,
+   token: null,
 };
 
 const userSlice = createSlice({
@@ -18,9 +19,10 @@ const userSlice = createSlice({
       state.userData = action.payload;
     },
     setIsSeller: (state, action) => {
-      state.isSeller = action.payload;
+      state.isSeller = action.payload
     },
   },
+
 });
 
 export const { setClerkUser, setUserData, setIsSeller } = userSlice.actions;

@@ -3,33 +3,35 @@ import React from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import Image from "next/image";
-import { SignOutButton, useClerk, UserButton, useUser } from "@clerk/nextjs";
+import { SignOutButton, useAuth, useClerk, UserButton,useUser } from "@clerk/nextjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { clearCartItem } from "@/app/redux/slices/CartSlice";
 import dynamic from "next/dynamic";
-
-
+import { useFetchUserData } from "@/app/customhooks/useFetchUserdata";
+import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
 const Navbar = () => {
   const [mounted, setMounted] = useState(false);
   const dispatch = useDispatch();
   const isSeller = useSelector((state) => state.user.isSeller)
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const { openSignIn, signOut } = useClerk();
+  const user = useUser();
+  const { fetchUserData } = useFetchUserData();
+  const { fetchProductData } = useFetchProductData();
 
-
-
-
-
-
+   // New Effect: Fetch user data
   const router = useRouter();
+
   useEffect(() => {
+        fetchUserData();
+        fetchProductData();
+    }, [user]);
+
+    useEffect(() => {
     setMounted(true);
   }, []);
   if (!mounted) return null; // Avoid hydration mismatch
-
-
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
@@ -63,18 +65,6 @@ const Navbar = () => {
           isSignedIn ?
             <>
               <UserButton
-          
-  onSignOut={() => {
-    console.log("Running custom sign out logic...");
-
-    // Clear localStorage
-    localStorage.removeItem('cartItems');
-
-    // Clear Redux
-    dispatch(clearCartItem());
-
-    // Optional: you can do more here if needed
-  }}
               >
                 <UserButton.MenuItems>
                   <UserButton.Action label="My Cart" labelIcon={<CartIcon />} onClick={() => { router.push('/cart') }} />
