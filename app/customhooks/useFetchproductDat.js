@@ -27,5 +27,5 @@ export const useFetchProductData = () => {
         }
     };
 
-    return { fetchProductData};
+    return {fetchProductData};
 };

@@ -27,6 +27,7 @@ const Navbar = () => {
         dispatch(setClerkUser(user))
            fetchUserData();
        }
+        fetchProductData();
       
     }, [isSignedIn]);
 
