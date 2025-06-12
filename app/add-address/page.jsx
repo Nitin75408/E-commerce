@@ -4,6 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const AddAddress = () => {
 
@@ -15,9 +19,29 @@ const AddAddress = () => {
         city: '',
         state: '',
     })
+    const {getToken} = useAuth();
+    const router = useRouter();
 
     const onSubmitHandler = async (e) => {
         e.preventDefault();
+
+        try {
+            const token = await getToken();
+      const {data} = await axios.post('/api/user/add-address',{address},{
+        headers:{Authorization:`Bearer ${token}`}
+      })
+
+      if(data.success){
+        toast.success(data.message);
+        router.push('/cart')
+      }
+
+      else {
+          toast.error(data.message);
+      }
+        } catch (error) {
+             toast.error(error.message);
+        }
 
     }
 

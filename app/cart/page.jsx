@@ -1,5 +1,5 @@
 'use client';
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
@@ -11,41 +11,47 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import { useAuth } from "@clerk/nextjs";
-import { useEffect } from "react";
 import toast from "react-hot-toast";
-
 
 const Cart = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { getToken } = useAuth();
+
   const products = useSelector(state => state.products.items || []);
   const cartItems = useSelector(state => state.cart.items || {});
-  console.log(cartItems)
   const getCartCount = useSelector(selectCartCount);
-  const dispatch = useDispatch();
-    const { getToken } = useAuth();
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Wait for hydration and render
+    const timer = setTimeout(() => setIsLoading(false), 50); // Small delay to wait for redux-persist
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const updateCartInDB = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        await saveCartToDB(token, cartItems);
+        console.log("🛒 Cart synced to DB");
+      } catch (err) {
+        console.error("❌ Failed to update cart in DB:", err.message);
+      }
+    };
+
+    if (Object.keys(cartItems).length > 0) {
+      updateCartInDB();
+    }
+  }, [cartItems]);
 
   const handleQuantityChange = (id, qty) => {
     dispatch(updateCartQuantity({ id: id, quantity: qty }));
   }
 
-useEffect(() => {
-  const updateCartInDB = async () => {
-    try {
-      const token = await getToken();
-      if (!token) return;
-      await saveCartToDB(token, cartItems);
-      console.log("🛒 Cart synced to DB");
-    } catch (err) {
-      console.error("❌ Failed to update cart in DB:", err.message);
-    }
-  };
-
-  // Prevent unnecessary calls (e.g., if cart is empty)
-  if (Object.keys(cartItems).length > 0) {
-    updateCartInDB();
-  }
-}, [cartItems]);
-
+  if (isLoading) return null;
 
   return (
     <>
@@ -162,5 +168,5 @@ useEffect(() => {
   );
 };
 
-export default dynamic(() => Promise.resolve(Cart), { ssr: false })
+export default dynamic(() => Promise.resolve(Cart), { ssr: false });
 

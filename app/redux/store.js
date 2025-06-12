@@ -1,39 +1,39 @@
-// redux/store.js
 import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // uses localStorage
+import { combineReducers } from 'redux';
+
 import userReducer from './slices/userSlice';
 import productReducer from './slices/ProductSlice';
 import cartReducer from './slices/CartSlice';
 
-// // 🔁 Load from localStorage
-// const loadCartFromLocalStorage = () => {
-//   try {
-//     const serializedState = localStorage.getItem('cartItems');
-//     return serializedState ? { items: JSON.parse(serializedState) } : undefined;
-//   } catch (e) {
-//     console.error("Could not load cart from localStorage", e);
-//     return undefined;
-//   }
-// };
-
-export const store = configureStore({
-  reducer: {
-    user: userReducer,
-    products: productReducer,
-    cart: cartReducer,
-  }
+// Combine reducers
+const rootReducer = combineReducers({
+  user: userReducer,
+  products: productReducer,
+  cart: cartReducer,
 });
 
+// Set up persist config
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: [ 'cart'], // only persist these slices
+};
 
+// Create persisted reducer
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// // 💾 Save to localStorage on every cart change
-// store.subscribe(() => {
-//   try {
-//     const state = store.getState();
-//     const serializedCart = JSON.stringify(state.cart.items);
-//     localStorage.setItem('cartItems', serializedCart);
-//   } catch (e) {
-//     console.error("Could not save cart to localStorage", e);
-//   }
-// });
+// Create store
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // needed for redux-persist
+    }),
+});
+
+// Create persistor
+export const persistor = persistStore(store);
 
 

@@ -1,13 +1,9 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
-import {
-  ClerkProvider
-} from '@clerk/nextjs'
-import { ReduxProvider } from '@/app/redux/ReduxProvider';
+import { ClerkProvider } from '@clerk/nextjs';
+import AppProvider from '@/app/redux/AppProvider';
 
-
-const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] })
+const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] });
 
 export const metadata = {
   title: "QuickCart - GreatStack",
@@ -16,16 +12,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-        <ClerkProvider>
+    <ClerkProvider>
       <html lang="en">
-        <body className={`${outfit.className} antialiased text-gray-700`} >
-          <Toaster />
-           <ReduxProvider>
-            {children}
-          </ReduxProvider>
+        <body className={`${outfit.className} antialiased text-gray-700`}>
+           <AppProvider>{children}</AppProvider>
         </body>
       </html>
-            </ClerkProvider>
-      
+    </ClerkProvider>
   );
 }
+

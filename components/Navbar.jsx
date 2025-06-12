@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useFetchUserData } from "@/app/customhooks/useFetchUserdata";
 import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
+  import { setClerkUser } from "@/app/redux/slices/userSlice";
 const Navbar = () => {
   const [mounted, setMounted] = useState(false);
   const dispatch = useDispatch();
@@ -19,19 +20,20 @@ const Navbar = () => {
   const { fetchUserData } = useFetchUserData();
   const { fetchProductData } = useFetchProductData();
 
+
    // New Effect: Fetch user data
   const router = useRouter();
-
   useEffect(() => {
-       if(user){
+       if(isSignedIn && isLoaded){
            fetchUserData();
-           fetchProductData();
+           dispatch(setClerkUser(user));
        }
       
-    }, [user]);
+    }, [isSignedIn]);
 
     useEffect(() => {
     setMounted(true);
+    fetchProductData();
   }, []);
   if (!mounted) return null; // Avoid hydration mismatch
 

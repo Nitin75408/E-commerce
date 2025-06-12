@@ -4,6 +4,9 @@ import { selectCartCount, selectCartAmount } from '@/app/redux/selectors/cartsel
 
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const OrderSummary = () => {
   const currency = process.NEXT_PUBLIC_CURRENCY;
@@ -11,14 +14,31 @@ const OrderSummary = () => {
   const products = useSelector((state) => state.products.items);
 const getCartCount = useSelector(selectCartCount);
 const getCartAmount = useSelector((state) => selectCartAmount(state, products));
-
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const {getToken} = useAuth();
+  const user = useSelector(state=>state.user.user);
   const [userAddresses, setUserAddresses] = useState([]);
 
-  const fetchUserAddresses = async () => {
-    setUserAddresses(addressDummyData);
+  const  fetchUserAddresses = async () => {
+    try {
+        const token = await getToken();
+   const {data} = await axios.get('api/user/get-address',{
+    headers:{Authorization:`Bearer ${token}`}
+   })
+
+   if(data.success){
+    setUserAddresses(data.addresses);
+    if(data.addresses.length > 0){
+      setSelectedAddress(data.addresses[0])
+    }
+   }
+   else{
+     toast.error(data.message);
+   }
+    } catch (error) {
+       toast.error(error.message);
+    }
   }
 
   const handleAddressSelect = (address) => {
@@ -29,10 +49,11 @@ const getCartAmount = useSelector((state) => selectCartAmount(state, products));
   const createOrder = async () => {
 
   }
-
   useEffect(() => {
+    if(user){
     fetchUserAddresses();
-  }, [])
+    }
+  }, [user])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
