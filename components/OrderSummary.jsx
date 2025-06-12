@@ -1,9 +1,9 @@
 import { addressDummyData } from "@/assets/assets";
 import { useRouter } from "next/navigation";
 import { selectCartCount, selectCartAmount } from '@/app/redux/selectors/cartselecters';
-
+import { setCartItem } from "@/app/redux/slices/CartSlice";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -14,11 +14,13 @@ const OrderSummary = () => {
   const products = useSelector((state) => state.products.items);
 const getCartCount = useSelector(selectCartCount);
 const getCartAmount = useSelector((state) => selectCartAmount(state, products));
+const cartItems = useSelector((state) =>state.cart.items);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const {getToken} = useAuth();
   const user = useSelector(state=>state.user.user);
   const [userAddresses, setUserAddresses] = useState([]);
+  const dispatch = useDispatch();
 
   const  fetchUserAddresses = async () => {
     try {
@@ -47,6 +49,36 @@ const getCartAmount = useSelector((state) => selectCartAmount(state, products));
   };
 
   const createOrder = async () => {
+      
+    try {
+         if(!selectedAddress){
+             return toast.error('please select an address')
+         }
+
+         let cartItemsArray  = Object.keys(cartItems).map((key)=>({product:key,quantity : cartItems[key]}))
+         cartItemsArray = cartItemsArray.filter(item=>item.quantity>0)
+
+         if(cartItemsArray.length===0){
+          return toast.error('cart is empty');
+         }
+
+         const token = await getToken();
+      const {data} = await axios.post('/api/order/create',{
+        address : selectedAddress._id,
+        items:cartItemsArray
+      },{headers:{Authorization:`Bearer ${token}`}})
+
+    if(data.success){
+      toast.success(data.message);
+      dispatch(setCartItem({}));
+      router.push('/order-placed')
+    }
+    else{
+       toast.error(data.message)
+    }
+    } catch (error) {
+       toast.error(error.message)
+    }
 
   }
   useEffect(() => {

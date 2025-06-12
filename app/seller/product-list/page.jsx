@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect,useState } from "react";
 import { assets, productsDummyData } from "@/assets/assets";
 import Image from "next/image";
 import Footer from "@/components/seller/Footer";
@@ -8,18 +8,22 @@ import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import toast from "react-hot-toast";
-
+import { useSelector } from "react-redux";
 const ProductList = () => {
 
    const router = useRouter();
    const {getToken}  = useAuth();
-   const user = useUser();
+   const user = useSelector((state)=>state.user.user);
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const isSeller = useSelector((state)=>state.user.isSeller);
+   const { isLoaded  } = useUser();
 
   const fetchSellerProduct = async () => {
      try {
+        if (!isLoaded) return;
       const token = await getToken();
+        if (!token) return;
     const { data } = await axios.get('/api/product/seller-list', {
         headers: { Authorization: `Bearer ${token}` }
     });
@@ -38,11 +42,13 @@ const ProductList = () => {
      }
   }
 
-  useEffect(() => {
-    if(user){
-    fetchSellerProduct();
-    }
-  }, [user])
+  useEffect(()=>{
+         if(user && isSeller){
+          fetchSellerProduct()
+         }
+     },[user,isLoaded])
+
+  
 
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">

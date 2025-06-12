@@ -4,6 +4,10 @@ import { assets, orderDummyData } from "@/assets/assets";
 import Image from "next/image";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
+import { useAuth } from "@clerk/nextjs";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
 
 const Orders = () => {
 
@@ -11,15 +15,36 @@ const Orders = () => {
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const {getToken} = useAuth();
+    const isSeller = useSelector((state)=>state.user.isSeller);
+    const user  = useSelector((state)=>state.user.user);
 
-    const fetchSellerOrders = async () => {
-        setOrders(orderDummyData);
-        setLoading(false);
+
+  const fetchSellerOrders = async () => {
+  try {
+    const token = await getToken();
+
+    const { data } = await axios.get('/api/order/seller-orders', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (data.success) {
+      setOrders(data.orders);
+    } else {
+      toast.error(data.message || 'Failed to fetch orders');
     }
+  } catch (error) {
+    toast.error(error?.response?.data?.message || error.message || 'Something went wrong');
+  } finally {
+    setLoading(false);
+  }
+};
 
-    useEffect(() => {
-        fetchSellerOrders();
-    }, []);
+   useEffect(()=>{
+       if(user && isSeller){
+        fetchSellerOrders()
+       }
+   },[user])
 
     return (
         <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">

@@ -10,9 +10,9 @@ import Footer from "@/components/Footer";
 
 const Home = () => {
   return (
-    <>
-      <Navbar/>
-      <div className="px-6 md:px-16 lg:px-32">
+    <> 
+        <Navbar/>
+      <div className="px-6 md:px-16 lg:px-32"> 
         <HeaderSlider />
         <HomeProducts />
         <FeaturedProduct />

@@ -5,23 +5,45 @@ import Image from "next/image";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Loading from "@/components/Loading";
+import { useAuth, useUser } from "@clerk/nextjs";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
 
 const MyOrders = () => {
 
      const currency = process.env.NEXT_PUBLIC_CURRENCY;
-
+     const {getToken} = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { isLoaded} = useUser();
+    const user = useSelector((state)=>state.user.user);
 
-    const fetchOrders = async () => {
-        setOrders(orderDummyData)
-        setLoading(false);
+   const fetchOrders = async () => {
+  try {
+    const token = await getToken();
+    const { data } = await axios.get('api/order/list', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data.success) {
+      setOrders(data.orders.reverse());
+    } else {
+      toast.error(data.message);
     }
+  } catch (error) {
+    toast.error(error.message);
+  } finally {
+    setLoading(false); // hide loader
+  }
+};
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
-
+ useEffect(() => {
+      console.log('user:', user);
+  console.log('isLoaded:', isLoaded);
+  if (user && isLoaded) {
+    fetchOrders();
+  }
+}, [user, isLoaded]);
     return (
         <>
             <Navbar />

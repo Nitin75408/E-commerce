@@ -18,7 +18,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: [ 'cart'], // only persist these slices
+  whitelist: [ 'cart','user','products'], // only persist these slices
 };
 
 // Create persisted reducer

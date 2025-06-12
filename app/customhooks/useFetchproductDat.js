@@ -1,14 +1,14 @@
 // app/hooks/useFetchUserData.js
 "use client";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { getProductDataFromApi } from "../redux/api_integration/Productapi";
 import { setProducts } from "../redux/slices/ProductSlice";
 
 export const useFetchProductData = () => {
    const { getToken } = useAuth();
-    const { user } = useUser();
+    const user = useSelector((state)=>state.user.user);
     const dispatch = useDispatch();
 
     const fetchProductData = async () => { 

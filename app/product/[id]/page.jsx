@@ -11,7 +11,7 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
 import { setProducts } from "@/app/redux/slices/ProductSlice";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 

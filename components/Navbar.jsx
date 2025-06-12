@@ -3,7 +3,7 @@ import React from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import Image from "next/image";
-import { SignOutButton, useAuth, useClerk, UserButton,useUser } from "@clerk/nextjs";
+import { SignOutButton, useAuth, useClerk, UserButton, useUser } from "@clerk/nextjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -12,7 +12,6 @@ import { useFetchUserData } from "@/app/customhooks/useFetchUserdata";
 import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
   import { setClerkUser } from "@/app/redux/slices/userSlice";
 const Navbar = () => {
-  const [mounted, setMounted] = useState(false);
   const dispatch = useDispatch();
   const isSeller = useSelector((state) => state.user.isSeller)
   const { isSignedIn,isLoaded ,user } = useUser();
@@ -25,17 +24,11 @@ const Navbar = () => {
   const router = useRouter();
   useEffect(() => {
        if(isSignedIn && isLoaded){
+        dispatch(setClerkUser(user))
            fetchUserData();
-           dispatch(setClerkUser(user));
        }
       
     }, [isSignedIn]);
-
-    useEffect(() => {
-    setMounted(true);
-    fetchProductData();
-  }, []);
-  if (!mounted) return null; // Avoid hydration mismatch
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
@@ -110,7 +103,7 @@ const Navbar = () => {
         {
           isSignedIn ?
             <>
-              <UserButton >
+              <UserButton afterSignOutUrl="" >
                 <UserButton.MenuItems>
                   <UserButton.Action label="home" labelIcon={<HomeIcon />} onClick={() => { router.push('/') }} />
                 </UserButton.MenuItems>
