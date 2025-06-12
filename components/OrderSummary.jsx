@@ -21,6 +21,7 @@ const cartItems = useSelector((state) =>state.cart.items);
   const user = useSelector(state=>state.user.user);
   const [userAddresses, setUserAddresses] = useState([]);
   const dispatch = useDispatch();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const  fetchUserAddresses = async () => {
     try {
@@ -49,6 +50,10 @@ const cartItems = useSelector((state) =>state.cart.items);
   };
 
   const createOrder = async () => {
+
+     if (isPlacingOrder) return; // Prevent duplicate clicks
+
+  setIsPlacingOrder(true);
       
     try {
          if(!selectedAddress){
@@ -79,6 +84,9 @@ const cartItems = useSelector((state) =>state.cart.items);
     } catch (error) {
        toast.error(error.message)
     }
+    finally {
+    setIsPlacingOrder(false);
+  }
 
   }
   useEffect(() => {
