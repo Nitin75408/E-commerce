@@ -54,7 +54,9 @@ const Product = () => {
 const handleCartButton = async (product) => {
   const token = await getToken();
   if (!token) {
-    toast.error("Please log in to add items to your cart.");
+    toast.error("Please log in to add items to your cart.", {
+      duration: 1500, // Toast will disappear in 1.5 seconds
+    });
     return;
   }
 
@@ -66,12 +68,14 @@ const handleCartButton = async (product) => {
   };
 
   updateCartInDB(product, updatedCart);
-};
+}
 
 const handleBuyNow = async (product) => {
   const token = await getToken();
   if (!token) {
-    toast.error("Please log in to continue with purchase.");
+     toast.error("Please log in to continue with purchase.", {
+      duration: 1500, // Toast will disappear in 1.5 seconds
+    });
     return;
   }
 
