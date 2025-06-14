@@ -12,7 +12,7 @@ export const useFetchUserData = () => {
   useEffect(() => {
     const fetchData = async () => {
        if(user){
-        if(user.publicMetadata){
+        if(user.publicMetadata.role==='seller'){
             dispatch(setIsSeller(true))
         }
        }
