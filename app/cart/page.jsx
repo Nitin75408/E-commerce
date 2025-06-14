@@ -6,12 +6,13 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { selectCartCount } from '@/app/redux/selectors/cartselecters';
 import { useSelector, useDispatch } from "react-redux";
-import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
+import { updateCartQuantity } from "@/app/redux/slices/CartSlice";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
+import { debounce } from "lodash";
 
 const Cart = () => {
   const router = useRouter();
@@ -23,33 +24,51 @@ const Cart = () => {
   const getCartCount = useSelector(selectCartCount);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false); // 🟡 prevent initial sync
 
+  // Delay rendering until after hydration
   useEffect(() => {
-    // Wait for hydration and render
-    const timer = setTimeout(() => setIsLoading(false), 50); // Small delay to wait for redux-persist
+    const timer = setTimeout(() => setIsLoading(false), 50);
     return () => clearTimeout(timer);
   }, []);
 
+  // Debounced function
+  const debouncedUpdateCartInDB = debounce(async (token, cartData) => {
+    try {
+      await saveCartToDB(token, cartData);
+      console.log("🛒 Debounced Cart synced to DB");
+    } catch (err) {
+      console.error("❌ Failed to update cart in DB:", err.message);
+    }
+  }, 500);
+
+//   Imagine you're typing a message in WhatsApp, and WhatsApp tries to save your draft to the cloud every single keystroke — that’s inefficient.
+
+// So instead, it waits until you stop typing for 500ms — then it syncs.
+
+// That’s debouncing.
+
+  // Sync cart to DB (but avoid initial hydration trigger)
   useEffect(() => {
-    const updateCartInDB = async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        await saveCartToDB(token, cartItems);
-        console.log("🛒 Cart synced to DB");
-      } catch (err) {
-        console.error("❌ Failed to update cart in DB:", err.message);
-      }
+    if (!hasMounted) {
+      setHasMounted(true);
+      return;
+    }
+
+    const syncCart = async () => {
+      const token = await getToken();
+      if (!token) return;
+      debouncedUpdateCartInDB(token, cartItems);
     };
 
     if (Object.keys(cartItems).length > 0) {
-      updateCartInDB();
+      syncCart();
     }
   }, [cartItems]);
 
   const handleQuantityChange = (id, qty) => {
     dispatch(updateCartQuantity({ id: id, quantity: qty }));
-  }
+  };
 
   if (isLoading) return null;
 
@@ -78,7 +97,6 @@ const Cart = () => {
               <tbody>
                 {Object.keys(cartItems).map((itemId) => {
                   const product = products.find(p => p._id === itemId);
-
                   if (!product || cartItems[itemId] <= 0) return null;
 
                   return (
@@ -96,7 +114,7 @@ const Cart = () => {
                           </div>
                           <button
                             className="md:hidden text-xs text-orange-600 mt-1"
-                            onClick={() => { handleQuantityChange(product._id, 0) }}
+                            onClick={() => handleQuantityChange(product._id, 0)}
                           >
                             Remove
                           </button>
@@ -105,7 +123,7 @@ const Cart = () => {
                           <p className="text-gray-800">{product.name}</p>
                           <button
                             className="text-xs text-orange-600 mt-1"
-                            onClick={() => { handleQuantityChange(product._id, 0) }}
+                            onClick={() => handleQuantityChange(product._id, 0)}
                           >
                             Remove
                           </button>
@@ -117,26 +135,20 @@ const Cart = () => {
                           <button
                             onClick={() => handleQuantityChange(product._id, cartItems[product._id] - 1)}
                           >
-                            <Image
-                              src={assets.decrease_arrow}
-                              alt="decrease_arrow"
-                              className="w-4 h-4"
-                            />
+                            <Image src={assets.decrease_arrow} alt="decrease_arrow" className="w-4 h-4" />
                           </button>
                           <input
                             type="number"
                             value={cartItems[itemId]}
-                            onChange={(e) => {
+                            onChange={(e) =>
                               handleQuantityChange(product._id, Number(e.target.value))
-                            }}
+                            }
                             className="w-8 border text-center appearance-none"
                           />
-                          <button onClick={() => handleQuantityChange(product._id, cartItems[product._id] + 1)}>
-                            <Image
-                              src={assets.increase_arrow}
-                              alt="increase_arrow"
-                              className="w-4 h-4"
-                            />
+                          <button
+                            onClick={() => handleQuantityChange(product._id, cartItems[product._id] + 1)}
+                          >
+                            <Image src={assets.increase_arrow} alt="increase_arrow" className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -169,4 +181,5 @@ const Cart = () => {
 };
 
 export default dynamic(() => Promise.resolve(Cart), { ssr: false });
+
 

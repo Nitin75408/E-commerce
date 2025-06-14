@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+
 import { useFetchUserData } from "@/app/customhooks/useFetchUserdata";
 import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
   import { setClerkUser } from "@/app/redux/slices/userSlice";
@@ -16,20 +17,11 @@ const Navbar = () => {
   const isSeller = useSelector((state) => state.user.isSeller)
   const { isSignedIn,isLoaded ,user } = useUser();
   const { openSignIn, signOut } = useClerk();
-  const { fetchUserData } = useFetchUserData();
-  const { fetchProductData } = useFetchProductData();
-
+         useFetchUserData();
+         useFetchProductData();
 
    // New Effect: Fetch user data
   const router = useRouter();
-  useEffect(() => {
-       if(isSignedIn && isLoaded){
-        dispatch(setClerkUser(user))
-           fetchUserData();
-       }
-        fetchProductData();
-      
-    }, [isSignedIn]);
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">

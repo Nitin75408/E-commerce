@@ -44,7 +44,7 @@ const Orders = () => {
        if(user && isSeller){
         fetchSellerOrders()
        }
-   },[user])
+   },[])
 
     return (
         <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">

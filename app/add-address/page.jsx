@@ -21,29 +21,34 @@ const AddAddress = () => {
     })
     const {getToken} = useAuth();
     const router = useRouter();
+     const [isSubmitting, setIsSubmitting] = useState(false); // ✅ prevents double submission
 
     const onSubmitHandler = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
-            const token = await getToken();
-      const {data} = await axios.post('/api/user/add-address',{address},{
-        headers:{Authorization:`Bearer ${token}`}
-      })
+    if (isSubmitting) return; // ⛔ prevent rapid multiple clicks
+    setIsSubmitting(true);
 
-      if(data.success){
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        '/api/user/add-address',
+        { address },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
         toast.success(data.message);
-        router.push('/cart')
+        router.push('/cart');
+      } else {
+        toast.error(data.message);
       }
-
-      else {
-          toast.error(data.message);
-      }
-        } catch (error) {
-             toast.error(error.message);
-        }
-
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setTimeout(() => setIsSubmitting(false), 1000); // ✅ wait 1s before allowing again
     }
+  };
 
     return (
         <>
@@ -100,7 +105,7 @@ const AddAddress = () => {
                             />
                         </div>
                     </div>
-                    <button type="submit" className="max-w-sm w-full mt-6 bg-orange-600 text-white py-3 hover:bg-orange-700 uppercase">
+                    <button type="submit"  disabled={isSubmitting} className="max-w-sm w-full mt-6 bg-orange-600 text-white py-3 hover:bg-orange-700 uppercase">
                         Save address
                     </button>
                 </form>
