@@ -10,10 +10,11 @@ export async function GET(request){
         const {userId} = getAuth(request);
         await connectDB();
         const user = await User.findById(userId);
-        const {cartItem} = user;
-        console.log(cartItem);
-    return NextResponse.json({succes:true,cartItem});
+        const {cartItems} = user;
+        console.log(cartItems);
+
+    return NextResponse.json({success: true, cartItems});
     } catch (error) {
-      return NextResponse.json({succes:false,message:error.message});   
+      return NextResponse.json({success:false,message:error.message});   
     }
 }

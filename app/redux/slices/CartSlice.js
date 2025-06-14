@@ -1,8 +1,37 @@
 // redux/slices/cartSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice,createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+
+
+
+export const fetchCartData = createAsyncThunk(
+  'cart/fetchcartData',
+  async (token, thunkAPI) => {
+    try {
+      const { data } = await axios.get('/api/cart/get', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (data.success) {
+        return data.cartItems; // ✅ only return cartItem, not full object
+      } else {
+        return thunkAPI.rejectWithValue(data.message || "Failed to fetch cart");
+      }
+
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const initialState = {
   items: {}, // { [productId]: quantity }
+  hasFetched : false,
+  error : 'idle',
+  status : 'idle',
 };
 
 const cartSlice = createSlice({
@@ -27,9 +56,26 @@ const cartSlice = createSlice({
 
      setCartItem: (state,action) => {
       state.items = action.payload;
-      console.log(state.items);
     },
   },
+
+
+   extraReducers: (builder) => {
+      builder
+        .addCase(fetchCartData.pending, (state) => {
+          state.status = 'loading';
+        })
+        .addCase(fetchCartData.fulfilled, (state, action) => {
+          state.items = action.payload;
+          state.status = 'succeeded';
+          state.hasFetched = true;
+        })
+        .addCase(fetchCartData.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.payload;
+          state.hasFetched = false;
+        });
+    },
 });
 
 export const { addToCart, updateCartQuantity,   setCartItem } = cartSlice.actions;

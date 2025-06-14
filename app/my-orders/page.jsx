@@ -22,7 +22,7 @@ const MyOrders = () => {
    const fetchOrders = async () => {
   try {
     const token = await getToken();
-    const { data } = await axios.get('api/order/list', {
+    const { data } = await axios.get('/api/order/list', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (data.success) {
@@ -38,8 +38,6 @@ const MyOrders = () => {
 };
 
  useEffect(() => {
-      console.log('user:', user);
-  console.log('isLoaded:', isLoaded);
   if (user && isLoaded) {
     fetchOrders();
   }

@@ -5,7 +5,8 @@ import Footer from "@/components/Footer";
 import { useSelector } from "react-redux";
 
 const AllProducts = () => {
-  const products = useSelector(state=>(state.products.items));
+  const products = useSelector(state=>state.products.items);
+  console.log(products)
 
     return (
         <>

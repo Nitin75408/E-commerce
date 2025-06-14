@@ -10,10 +10,17 @@ export const fetchCartFromDB = async (token) => {
 };
 
 export const saveCartToDB = async (token, cartItems) => {
-  const { data } = await axios.post("/api/cart/update", { cartdata: cartItems }, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return data;
+  try {
+    await axios.post("/api/cart/update", 
+      { cartdata: cartItems }, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("✅ Cart saved successfully");
+  } catch (err) {
+    console.error("❌ Failed to save cart:", err.message);
+  }
 };

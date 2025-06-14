@@ -2,10 +2,11 @@
 import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
+import { fetchProducts } from "../redux/slices/ProductSlice";
 
 const AddProduct = () => {
   const {getToken} = useAuth();
@@ -15,6 +16,7 @@ const AddProduct = () => {
   const [category, setCategory] = useState('Earphone');
   const [price, setPrice] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
+  const dispatch = useDispatch();
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -36,10 +38,9 @@ const handleSubmit = async (e) => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    console.log(data);
-
     if (data.success) {
       toast.success(data.message);
+      dispatch(fetchProducts(token));
       setFiles([]);
       setName('');
       setDescription('');

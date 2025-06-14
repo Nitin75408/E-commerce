@@ -1,5 +1,6 @@
 // redux/slices/userSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { setCartItem } from './CartSlice';
 import axios from 'axios';
 
 
@@ -47,10 +48,10 @@ const userSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
-        console.log(action.payload)
         state.userData = action.payload;
         state.status = 'succeeded';
         state.hasFetched = true; // ✅ mark as fetched
+        state.user = state.userData.user._id;
       })
       .addCase(fetchUserData.rejected, (state) => {
         state.status = 'failed';

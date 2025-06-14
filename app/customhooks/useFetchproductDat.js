@@ -10,10 +10,13 @@ export const useFetchProductData = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("h");
+        console.log(hasFetched)
       if (hasFetched) return; // ✅ Don't fetch again
+    
       const token = await getToken();
+      console.log(token);
       if (!token) return;
-
       dispatch(fetchProducts(token));
     };
 

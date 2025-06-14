@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 
 import { useFetchUserData } from "@/app/customhooks/useFetchUserdata";
 import { useFetchProductData } from "@/app/customhooks/useFetchproductDat";
+import { useFetchCartData } from "@/app/customhooks/useFetchCartData";
   import { setClerkUser } from "@/app/redux/slices/userSlice";
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -19,10 +20,9 @@ const Navbar = () => {
   const { openSignIn, signOut } = useClerk();
          useFetchUserData();
          useFetchProductData();
-
+         useFetchCartData();
    // New Effect: Fetch user data
   const router = useRouter();
-
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
       <Image
@@ -104,10 +104,12 @@ const Navbar = () => {
                   <UserButton.Action label="products" labelIcon={<BoxIcon />} onClick={() => { router.push('/all-products') }} />
                 </UserButton.MenuItems>
                 <UserButton.MenuItems>
-                  <UserButton.Action label="My Cart" labelIcon={<CartIcon />} onClick={() => { router.push('/cart') }} />
+                  <UserButton.Action label="My Cart" labelIcon={<CartIcon />} onClick={() => {
+                     router.push('/cart')
+                   }} />
                 </UserButton.MenuItems>
                 <UserButton.MenuItems>
-                  <UserButton.Action label="My orders" labelIcon={<BagIcon />} onClick={() => { router.push('/my-orders') }} />
+                  <UserButton.Action label="My orders" labelIcon={<BagIcon />} onClick={ () => { router.push('/my-orders') } } />
                 </UserButton.MenuItems>
               </UserButton>
             </>

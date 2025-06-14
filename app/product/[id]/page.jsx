@@ -36,45 +36,44 @@ const Product = () => {
     return () => clearTimeout(timer);
   }, [rawCartData]);
 
-  const handleCartButton = async (productData) => {
-    dispatch(addToCart(productData));
+  const updateCartInDB = async (product, updatedCart) => {
+  try {
+    const token = await getToken();
+    if (!token) return;
 
-    const updateCartInDB = async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        await saveCartToDB(token, {
-          ...cartData,
-          [productData._id]: (cartData[productData._id] || 0) + 1,
-        });
-        toast.success("Item added to cart");
-        console.log("🛒 Cart synced to DB");
-      } catch (err) {
-        console.error("❌ Failed to update cart in DB:", err.message);
-      }
-    };
-    updateCartInDB();
+    await saveCartToDB(token, {
+      [product._id]: updatedCart[product._id] || 1,
+    });
+
+    toast.success("Item added to cart");
+    console.log("🛒 Cart synced to DB");
+  } catch (err) {
+    console.error("❌ Failed to update cart in DB:", err.message);
+  }
+};
+const handleCartButton = async (product) => {
+  dispatch(addToCart(product));
+  
+  // Clone current cart & add this item manually
+  const updatedCart = {
+    ...rawCartData,
+    [product._id]: (rawCartData[product._id] || 0) + 1,
   };
 
-  const handleBuyNow = async (productData) => {
-    dispatch(addToCart(productData));
+  updateCartInDB(product, updatedCart);
+};
 
-    const updateCartInDB = async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        await saveCartToDB(token, {
-          ...cartData,
-          [productData._id]: (cartData[productData._id] || 0) + 1,
-        });
-        toast.success("Item added for checkout");
-        router.push("/cart");
-      } catch (err) {
-        console.error("❌ Failed to update cart in DB:", err.message);
-      }
-    };
-    updateCartInDB();
+const handleBuyNow = async (product) => {
+  dispatch(addToCart(product));
+
+  const updatedCart = {
+    ...rawCartData,
+    [product._id]: (rawCartData[product._id] || 0) + 1,
   };
+
+  await updateCartInDB(product, updatedCart);
+  router.push("/cart");
+};
 
   const fetchProduct = async () => {
     const product = products.find((product) => product._id === id);

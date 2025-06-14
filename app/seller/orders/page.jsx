@@ -18,6 +18,7 @@ const Orders = () => {
     const {getToken} = useAuth();
     const isSeller = useSelector((state)=>state.user.isSeller);
     const user  = useSelector((state)=>state.user.user);
+    console.log('user' ,user)
 
 
   const fetchSellerOrders = async () => {
@@ -44,7 +45,7 @@ const Orders = () => {
        if(user && isSeller){
         fetchSellerOrders()
        }
-   },[])
+   },[user,isSeller])
 
     return (
         <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">

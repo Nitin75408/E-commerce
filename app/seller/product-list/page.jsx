@@ -17,36 +17,49 @@ const ProductList = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const isSeller = useSelector((state)=>state.user.isSeller);
+  const isFetched = useSelector(state=>state.products.hasFetched)
+  const productData = useSelector(state=>state.products.items);
    const { isLoaded  } = useUser();
 
-  const fetchSellerProduct = async () => {
-     try {
-        if (!isLoaded) return;
-      const token = await getToken();
-        if (!token) return;
+const fetchSellerProduct = async () => {
+  try {
+    if (isFetched) {
+      console.log("Already fetched, skipping API call");
+      setProducts(productData); // Assuming `productData` is already from Redux
+      setLoading(false);
+      return;
+    }
+
+    if (!isLoaded || !user || !isSeller) return;
+
+    setLoading(true); // ✅ show loader before fetch
+
+    const token = await getToken();
+    if (!token) {
+      toast.error("Token not available.");
+      setLoading(false);
+      return;
+    }
+
     const { data } = await axios.get('/api/product/seller-list', {
-        headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-      if(data.success){
-        setProducts(data.products)
-        setLoading(false);
-      }
-
-      else {
-        toast.error(data.message);
-      }
-    
-     } catch (error) {
-         toast.error(error.message);
-     }
+    if (data.success) {
+      setProducts(data.products);
+    } else {
+      toast.error(data.message || "Failed to fetch seller products.");
+    }
+  } catch (error) {
+    toast.error(error.message || "Something went wrong.");
+  } finally {
+    setLoading(false); // ✅ ensure loading stops in all cases
   }
+};
 
-  useEffect(()=>{
-         if(user && isSeller){
-          fetchSellerProduct()
-         }
-     },[user,isLoaded])
+useEffect(() => {
+  fetchSellerProduct();
+}, [user, isLoaded, isSeller, isFetched]); // ✅ add `isFetched`
 
   
 

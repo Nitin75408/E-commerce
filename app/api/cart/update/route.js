@@ -13,7 +13,7 @@ export async function POST(request){
         const {cartdata}=await request.json();
     await connectDB();
     const user = await User.findById(userId);
-    user.cartItems = cartdata;
+    user.cartItems = { ...user.cartItems, ...cartdata };
     user.save();
 
    return NextResponse.json({success:true});
