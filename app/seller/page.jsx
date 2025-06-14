@@ -7,9 +7,10 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 import { fetchProducts } from "../redux/slices/ProductSlice";
+import FullScreenLoader from "@/components/FullScreenLoader";
 
 const AddProduct = () => {
-  const {getToken} = useAuth();
+  const { getToken } = useAuth();
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -18,59 +19,69 @@ const AddProduct = () => {
   const [offerPrice, setOfferPrice] = useState('');
   const dispatch = useDispatch();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const [loading, setLoading] = useState(false);
 
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('description', description);
-  formData.append('category', category);
-  formData.append('price', price);
-  formData.append('offerPrice', offerPrice);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  for (let i = 0; i < files.length; i++) {
-    formData.append('images', files[i]);
-  }
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('price', price);
+    formData.append('offerPrice', offerPrice);
 
-  try {
-    const token = await getToken();
-    const { data } = await axios.post('/api/product/add', formData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (data.success) {
-      toast.success(data.message);
-      dispatch(fetchProducts(token));
-      setFiles([]);
-      setName('');
-      setDescription('');
-      setCategory('Earphone');
-      setPrice('');
-      setOfferPrice('');
-    } else {
-      toast.error(data.message);
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
     }
-  } catch (error) {
-    toast.error(error.response?.data?.message || error.message);
-  } 
-};
+
+    try {
+      setLoading(true);
+      const token = await getToken();
+      const { data } = await axios.post('/api/product/add', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        dispatch(fetchProducts(token));
+        // Reset form
+        setFiles([]);
+        setName('');
+        setDescription('');
+        setCategory('Earphone');
+        setPrice('');
+        setOfferPrice('');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
+      {loading && <FullScreenLoader message="Adding Product..." />}
       <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-5 max-w-lg">
         <div>
           <p className="text-base font-medium">Product Image</p>
           <div className="flex flex-wrap items-center gap-3 mt-2">
-
             {[...Array(4)].map((_, index) => (
               <label key={index} htmlFor={`image${index}`}>
-                <input onChange={(e) => {
-                  const updatedFiles = [...files];
-                  updatedFiles[index] = e.target.files[0];
-                  setFiles(updatedFiles);
-                }} type="file" id={`image${index}`} hidden />
+                <input
+                  onChange={(e) => {
+                    const updatedFiles = [...files];
+                    updatedFiles[index] = e.target.files[0];
+                    setFiles(updatedFiles);
+                  }}
+                  type="file"
+                  id={`image${index}`}
+                  hidden
+                />
                 <Image
-                  key={index}
                   className="max-w-24 cursor-pointer"
                   src={files[index] ? URL.createObjectURL(files[index]) : assets.upload_area}
                   alt=""
@@ -79,9 +90,9 @@ const handleSubmit = async (e) => {
                 />
               </label>
             ))}
-
           </div>
         </div>
+
         <div className="flex flex-col gap-1 max-w-md">
           <label className="text-base font-medium" htmlFor="product-name">
             Product Name
@@ -96,11 +107,9 @@ const handleSubmit = async (e) => {
             required
           />
         </div>
+
         <div className="flex flex-col gap-1 max-w-md">
-          <label
-            className="text-base font-medium"
-            htmlFor="product-description"
-          >
+          <label className="text-base font-medium" htmlFor="product-description">
             Product Description
           </label>
           <textarea
@@ -113,6 +122,7 @@ const handleSubmit = async (e) => {
             required
           ></textarea>
         </div>
+
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium" htmlFor="category">
@@ -122,7 +132,7 @@ const handleSubmit = async (e) => {
               id="category"
               className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setCategory(e.target.value)}
-              defaultValue={category}
+              value={category}
             >
               <option value="Earphone">Earphone</option>
               <option value="Headphone">Headphone</option>
@@ -133,6 +143,7 @@ const handleSubmit = async (e) => {
               <option value="Accessories">Accessories</option>
             </select>
           </div>
+
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium" htmlFor="product-price">
               Product Price
@@ -147,6 +158,7 @@ const handleSubmit = async (e) => {
               required
             />
           </div>
+
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium" htmlFor="offer-price">
               Offer Price
@@ -162,11 +174,17 @@ const handleSubmit = async (e) => {
             />
           </div>
         </div>
-        <button type="submit" className="px-8 py-2.5 bg-orange-600 text-white font-medium rounded">
-          ADD
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={`px-8 py-2.5 text-white font-medium rounded ${
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-orange-600 hover:bg-orange-700"
+          }`}
+        >
+          {loading ? "Adding..." : "ADD"}
         </button>
       </form>
-      {/* <Footer /> */}
     </div>
   );
 };

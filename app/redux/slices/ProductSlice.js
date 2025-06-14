@@ -2,21 +2,16 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 export const fetchProducts = createAsyncThunk(
-  'products/fetchProducts',
-  async (token, thunkAPI) => {
+  "products/fetchProducts",
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get('/api/product/list', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return res.data.products; // ✅ Return only products array
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response?.data || error.message);
+      const res = await axios.get("/api/product/list");
+      return res.data.products;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
-
 const productSlice = createSlice({
   name: 'products',
   initialState: {

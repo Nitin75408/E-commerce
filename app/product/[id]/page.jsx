@@ -52,9 +52,14 @@ const Product = () => {
   }
 };
 const handleCartButton = async (product) => {
+  const token = await getToken();
+  if (!token) {
+    toast.error("Please log in to add items to your cart.");
+    return;
+  }
+
   dispatch(addToCart(product));
-  
-  // Clone current cart & add this item manually
+
   const updatedCart = {
     ...rawCartData,
     [product._id]: (rawCartData[product._id] || 0) + 1,
@@ -64,6 +69,12 @@ const handleCartButton = async (product) => {
 };
 
 const handleBuyNow = async (product) => {
+  const token = await getToken();
+  if (!token) {
+    toast.error("Please log in to continue with purchase.");
+    return;
+  }
+
   dispatch(addToCart(product));
 
   const updatedCart = {

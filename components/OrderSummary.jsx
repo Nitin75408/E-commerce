@@ -1,48 +1,50 @@
+"use client";
 import { addressDummyData } from "@/assets/assets";
 import { useRouter } from "next/navigation";
 import { selectCartCount, selectCartAmount } from '@/app/redux/selectors/cartselecters';
 import { setCartItem } from "@/app/redux/slices/CartSlice";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import FullScreenLoader from "./FullScreenLoader";
 
 const OrderSummary = () => {
-  const currency = process.NEXT_PUBLIC_CURRENCY;
+  const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
   const router = useRouter();
   const products = useSelector((state) => state.products.items);
-const getCartCount = useSelector(selectCartCount);
-const getCartAmount = useSelector((state) => selectCartAmount(state, products));
-const cartItems = useSelector((state) =>state.cart.items);
+  const getCartCount = useSelector(selectCartCount);
+  const getCartAmount = useSelector((state) => selectCartAmount(state, products));
+  const cartItems = useSelector((state) => state.cart.items);
+
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const {getToken} = useAuth();
-  const user = useSelector(state=>state.user.user);
+  const { getToken } = useAuth();
+  const user = useSelector(state => state.user.user);
   const [userAddresses, setUserAddresses] = useState([]);
   const dispatch = useDispatch();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  const  fetchUserAddresses = async () => {
+  const fetchUserAddresses = async () => {
     try {
-        const token = await getToken();
-   const {data} = await axios.get('api/user/get-address',{
-    headers:{Authorization:`Bearer ${token}`}
-   })
+      const token = await getToken();
+      const { data } = await axios.get('/api/user/get-address', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-   if(data.success){
-    setUserAddresses(data.addresses);
-    if(data.addresses.length > 0){
-      setSelectedAddress(data.addresses[0])
-    }
-   }
-   else{
-     toast.error(data.message);
-   }
+      if (data.success) {
+        setUserAddresses(data.addresses);
+        if (data.addresses.length > 0) {
+          setSelectedAddress(data.addresses[0]);
+        }
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
-       toast.error(error.message);
+      toast.error(error.message);
     }
-  }
+  };
 
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
@@ -50,57 +52,60 @@ const cartItems = useSelector((state) =>state.cart.items);
   };
 
   const createOrder = async () => {
+    if (isPlacingOrder) return;
 
-     if (isPlacingOrder) return; // Prevent duplicate clicks
-
-  setIsPlacingOrder(true);
-      
+    setIsPlacingOrder(true);
     try {
-         if(!selectedAddress){
-             return toast.error('please select an address')
-         }
+      if (!selectedAddress) {
+        toast.error("Please select an address");
+        setIsPlacingOrder(false);
+        return;
+      }
 
-         let cartItemsArray  = Object.keys(cartItems).map((key)=>({product:key,quantity : cartItems[key]}))
-         cartItemsArray = cartItemsArray.filter(item=>item.quantity>0)
+      let cartItemsArray = Object.keys(cartItems).map((key) => ({
+        product: key,
+        quantity: cartItems[key]
+      })).filter(item => item.quantity > 0);
 
-         if(cartItemsArray.length===0){
-          return toast.error('cart is empty');
-         }
+      if (cartItemsArray.length === 0) {
+        toast.error("Cart is empty");
+        setIsPlacingOrder(false);
+        return;
+      }
 
-         const token = await getToken();
-      const {data} = await axios.post('/api/order/create',{
-        address : selectedAddress._id,
-        items:cartItemsArray
-      },{headers:{Authorization:`Bearer ${token}`}})
+      const token = await getToken();
+      const { data } = await axios.post('/api/order/create', {
+        address: selectedAddress._id,
+        items: cartItemsArray
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    if(data.success){
-      toast.success(data.message);
-      dispatch(setCartItem({}));
-      router.push('/order-placed')
-    }
-    else{
-       toast.error(data.message)
-    }
+      if (data.success) {
+        toast.success(data.message);
+        dispatch(setCartItem({}));
+        router.push("/order-placed");
+      } else {
+        toast.error(data.message || "Order failed");
+      }
     } catch (error) {
-       toast.error(error.message)
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
     }
-    finally {
-    setIsPlacingOrder(false);
-  }
+  };
 
-  }
   useEffect(() => {
-    if(user){
-    fetchUserAddresses();
+    if (user) {
+      fetchUserAddresses();
     }
-  }, [user])
+  }, [user]);
 
   return (
-    <div className="w-full md:w-96 bg-gray-500/5 p-5">
-      <h2 className="text-xl md:text-2xl font-medium text-gray-700">
-        Order Summary
-      </h2>
+    <div className="w-full md:w-96 bg-gray-500/5 p-5 relative">
+      <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
       <hr className="border-gray-500/30 my-5" />
+
       <div className="space-y-6">
         <div>
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
@@ -166,7 +171,7 @@ const cartItems = useSelector((state) =>state.cart.items);
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items {getCartCount}</p>
-            <p className="text-gray-800">{currency}{ getCartAmount}</p>
+            <p className="text-gray-800">{currency}{getCartAmount}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Shipping Fee</p>
@@ -183,9 +188,19 @@ const cartItems = useSelector((state) =>state.cart.items);
         </div>
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
-        Place Order
+      <button
+        onClick={createOrder}
+        disabled={!user || isPlacingOrder}
+        className={`w-full py-3 mt-5 text-white ${
+          !user || isPlacingOrder
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-orange-600 hover:bg-orange-700"
+        }`}
+      >
+        {isPlacingOrder ? "Placing..." : "Place Order"}
       </button>
+
+      {isPlacingOrder && <FullScreenLoader />}
     </div>
   );
 };
