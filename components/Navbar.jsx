@@ -91,7 +91,7 @@ const Navbar = () => {
                 </UserButton.MenuItems>
               </UserButton>
             ) : (
-              <button onClick={() => openSignIn()} className="hidden sm:flex items-center gap-2 hover:text-gray-900 transition px-3 py-1.5 rounded-full border border-gray-200 bg-white">
+              <button onClick={() => openSignIn()} className="flex items-center gap-2 hover:text-gray-900 transition px-3 py-1.5 rounded-full border border-gray-200 bg-white">
                 <Image src={assets.user_icon} alt="user icon" />
                 Account
               </button>
