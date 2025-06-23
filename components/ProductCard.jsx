@@ -2,9 +2,11 @@ import React from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+
 const ProductCard = ({ product }) => {
     const router  = useRouter();
     const currency = process.env.NEXT_PUBLIC_CURRENCY
+    
     return (
         <div
             onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}

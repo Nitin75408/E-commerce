@@ -24,6 +24,10 @@ const productSlice = createSlice({
     setProducts: (state, action) => {
       state.items = action.payload;
     },
+    removeProduct: (state, action) => {
+      const productId = action.payload;
+      state.items = state.items.filter(item => item._id !== productId);
+    },
   },
   // ✅ FIXED: `extraReducers` should be outside `reducers`
   extraReducers: (builder) => {
@@ -44,6 +48,6 @@ const productSlice = createSlice({
   },
 });
 
-export const { setProducts } = productSlice.actions;
+export const { setProducts, removeProduct } = productSlice.actions;
 export default productSlice.reducer;
 

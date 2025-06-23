@@ -18,7 +18,8 @@ const Orders = () => {
     const {getToken} = useAuth();
     const isSeller = useSelector((state)=>state.user.isSeller);
     const user  = useSelector((state)=>state.user.user);
-    console.log('user' ,user)
+    console.log('user from order summary' ,user)
+    console.log('isSeller from order summary' ,isSeller)
 
 
   const fetchSellerOrders = async () => {
@@ -29,8 +30,10 @@ const Orders = () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    console.log('data from order summary' ,data)
+
     if (data.success) {
-      setOrders(data.orders);
+        setOrders(data.orders.reverse()); 
     } else {
       toast.error(data.message || 'Failed to fetch orders');
     }
@@ -68,7 +71,8 @@ const Orders = () => {
                                 </p>
                             </div>
                             <div>
-                                <p>
+                               {
+                                  order.address ? ( <p>
                                     <span className="font-medium">{order.address.fullName}</span>
                                     <br />
                                     <span >{order.address.area}</span>
@@ -76,7 +80,10 @@ const Orders = () => {
                                     <span>{`${order.address.city}, ${order.address.state}`}</span>
                                     <br />
                                     <span>{order.address.phoneNumber}</span>
-                                </p>
+                                </p>) : (
+                                    <p> User not exist</p>
+                                )
+                               }
                             </div>
                             <p className="font-medium my-auto">{currency}{order.amount}</p>
                             <div>

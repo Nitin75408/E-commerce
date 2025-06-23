@@ -47,6 +47,11 @@ import product_details_page_apple_earphone_image3 from "./product_details_page_a
 import product_details_page_apple_earphone_image4 from "./product_details_page_apple_earphone_image4.png";
 import product_details_page_apple_earphone_image5 from "./product_details_page_apple_earphone_image5.png";
 
+// --- Seller Dashboard Icons ---
+import dollar_icon from './dollar_sign.svg';
+import orders_bag_icon from './orders_bag.svg';
+import conversion_icon from './conversion_icon.svg';
+
 export const assets = {
   logo,
   search_icon,
@@ -95,7 +100,11 @@ export const assets = {
   product_details_page_apple_earphone_image3,
   product_details_page_apple_earphone_image4,
   product_details_page_apple_earphone_image5,
-  checkmark
+  checkmark,
+  // Seller Dashboard
+  dollar_icon,
+  orders_bag_icon,
+  conversion_icon
 };
 
 export const BagIcon = () => {

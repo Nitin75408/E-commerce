@@ -2,6 +2,9 @@ import { Inngest } from "inngest";
 import connectDB from "./db";
 import { User } from "@/models/user";
 import Order from "@/models/Order";
+import Product from "@/models/Product";
+import Review from "@/models/Review";
+import Address from "@/models/address";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "ECommerce" });
@@ -55,7 +58,6 @@ async({event})=>{
 // INgest function to delete user from database
 
 export const syncUserDeletion = inngest.createFunction(
-
     {
         id : 'delete-user-with-clerk'
     },
@@ -65,7 +67,12 @@ export const syncUserDeletion = inngest.createFunction(
     async({event})=>{
         const { id  } = event.data
         await connectDB();
-        await User.findByIdAndDelete(id)
+        await Promise.all([
+          User.findByIdAndDelete(id),
+          Product.deleteMany({ userId: id }),
+          Review.deleteMany({ userId: id }),
+          Address.deleteMany({ userId: id })
+        ]);
     }
 )
 

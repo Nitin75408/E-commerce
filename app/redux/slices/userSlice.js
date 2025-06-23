@@ -26,6 +26,7 @@ const initialState = {
   isSeller: false,
    hasFetched: false,
    status : "idle",
+   refreshOrders: false,
 };
 
 const userSlice = createSlice({
@@ -41,6 +42,10 @@ const userSlice = createSlice({
     setIsSeller: (state, action) => {
       state.isSeller = action.payload
     },
+    setRefreshOrders: (state, action) => {
+      state.refreshOrders = action.payload; // ✅ true or false
+    },
+   
   },
    extraReducers: (builder) => {
     builder
@@ -61,5 +66,5 @@ const userSlice = createSlice({
 
 });
 
-export const { setClerkUser, setUserData, setIsSeller } = userSlice.actions;
+export const { setClerkUser, setUserData, setIsSeller,  setRefreshOrders } = userSlice.actions;
 export default userSlice.reducer;

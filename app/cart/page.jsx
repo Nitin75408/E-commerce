@@ -13,6 +13,7 @@ import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { debounce } from "lodash";
+import FullScreenLoader from "@/components/FullScreenLoader";
 
 const Cart = () => {
   const router = useRouter();
@@ -70,7 +71,29 @@ const Cart = () => {
     dispatch(updateCartQuantity({ id: id, quantity: qty }));
   };
 
-  if (isLoading) return null;
+  if (isLoading) return <FullScreenLoader />; // Use a loader instead of null
+
+  // If cart is empty, show a message
+  if (!isLoading && getCartCount === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h1>
+          <p className="text-lg text-gray-600 mb-8">
+            Looks like you haven't added anything to your cart yet.
+          </p>
+          <button
+            onClick={() => router.push("/all-products")}
+            className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </>
+    );
+  }
+
 
   return (
     <>
@@ -180,6 +203,6 @@ const Cart = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(Cart), { ssr: false });
+export default Cart;
 
 

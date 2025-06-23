@@ -13,7 +13,8 @@ async function connectDB(){
 
     if(!cached.promise){
         const opts = {
-            bufferCommands : false
+            bufferCommands : false,
+            serverSelectionTimeoutMS: 5000 // 5 seconds
         }
 
         cached.promise=mongoose.connect(`${process.env.MONGODB_URI}/ECommerce`,opts).then(mongoose =>{

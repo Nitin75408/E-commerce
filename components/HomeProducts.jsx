@@ -1,11 +1,26 @@
 import React from "react";
 import ProductCard from "./ProductCard";
 import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
 const HomeProducts = () => {
+  const router = useRouter();
 
   const  products = useSelector((state)=>state.products.items);
   console.log(products);
+  
+  // Safety check for undefined products
+  if (!products) {
+    return (
+      <div className="flex flex-col items-center pt-14">
+        <p className="text-2xl font-medium text-left w-full">Popular products</p>
+        <div className="flex justify-center items-center h-32">
+          <p className="text-gray-500">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center pt-14">
       <p className="text-2xl font-medium text-left w-full">Popular products</p>

@@ -14,12 +14,14 @@ import { setProducts } from "@/app/redux/slices/ProductSlice";
 import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
+import ReviewSection from "@/components/ReviewSection";
 
 const Product = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { getToken } = useAuth();
   const router = useRouter();
+  const currency = process.env.NEXT_PUBLIC_CURRENCY ;
 
   const products = useSelector((state) => state.products.items);
   const rawCartData = useSelector((state) => state.cart.items);
@@ -154,9 +156,9 @@ const handleBuyNow = async (product) => {
             </div>
             <p className="text-gray-600 mt-3">{productData.description}</p>
             <p className="text-3xl font-medium mt-6">
-              ${productData.offerPrice}
+              {currency}{productData.offerPrice}
               <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                ${productData.price}
+                {currency}{productData.price}
               </span>
             </p>
             <hr className="bg-gray-600 my-6" />
@@ -199,6 +201,12 @@ const handleBuyNow = async (product) => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <hr className="my-12 border-gray-300" />
+        <ReviewSection productId={productData._id} />
+
+        {/* Featured Products Section */}
         <div className="flex flex-col items-center">
           <div className="flex flex-col items-center mb-4 mt-16">
             <p className="text-3xl font-medium">

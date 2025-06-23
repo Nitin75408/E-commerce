@@ -8,16 +8,22 @@ import Loading from "@/components/Loading";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import {setRefreshOrders} from "@/app/redux/slices/userSlice";
+
+
 
 const MyOrders = () => {
 
-     const currency = process.env.NEXT_PUBLIC_CURRENCY;
+     const currency = process.env.NEXT_PUBLIC_CURRENCY; 
      const {getToken} = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const { isLoaded} = useUser();
     const user = useSelector((state)=>state.user.user);
+    const refreshOrders = useSelector((state) => state.user.refreshOrders);
+    const dispatch =  useDispatch();
+   
 
    const fetchOrders = async () => {
   try {
@@ -37,11 +43,23 @@ const MyOrders = () => {
   }
 };
 
- useEffect(() => {
+useEffect(() => {
   if (user && isLoaded) {
-    fetchOrders();
+    fetchOrders(); // ✅ Always fetch on direct visit
+
+    if (refreshOrders) {
+      dispatch(setRefreshOrders(false)); // ✅ Reset flag
+    }
   }
 }, [user, isLoaded]);
+
+useEffect(() => {
+  if (user && isLoaded && refreshOrders) {
+    fetchOrders(); // ✅ Re-fetch if we came via Order placed flow
+    dispatch(setRefreshOrders(false)); // ✅ Reset after using
+  }
+}, [refreshOrders]);
+
     return (
         <>
             <Navbar />
