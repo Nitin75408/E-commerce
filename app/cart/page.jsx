@@ -23,6 +23,7 @@ const Cart = () => {
   const products = useSelector(state => state.products.items || []);
   const cartItems = useSelector(state => state.cart.items || {});
   const getCartCount = useSelector(selectCartCount);
+  const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
 
   const [isLoading, setIsLoading] = useState(true);
   const [hasMounted, setHasMounted] = useState(false); // 🟡 prevent initial sync
@@ -176,7 +177,7 @@ const Cart = () => {
                         </div>
                       </td>
                       <td className="py-4 md:px-4 px-1 text-gray-600">
-                        ${(product.offerPrice * cartItems[itemId]).toFixed(2)}
+                        {currency}{(product.offerPrice * cartItems[itemId]).toFixed(2)}
                       </td>
                     </tr>
                   );
