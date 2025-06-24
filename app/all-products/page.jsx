@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
 import axios from 'axios';
-import Loading from '@/components/Loading';
+import FullScreenLoader from "@/components/FullScreenLoader";
 
 const AllProducts = () => {
 	const [products, setProducts] = useState([]);
@@ -87,7 +87,7 @@ const AllProducts = () => {
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
 					
-					{loading ? <Loading /> : (
+					{loading ? <FullScreenLoader message="Loading products..." /> : (
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 							{products.map((product) => <ProductCard key={product._id} product={product} />)}
 						</div>

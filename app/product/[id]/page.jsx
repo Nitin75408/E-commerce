@@ -39,58 +39,57 @@ const Product = () => {
   }, [rawCartData]);
 
   const updateCartInDB = async (product, updatedCart) => {
-  try {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      await saveCartToDB(token, updatedCart);
+
+      toast.success("Item added to cart");
+      console.log("🛒 Cart synced to DB");
+    } catch (err) {
+      console.error("❌ Failed to update cart in DB:", err.message);
+    }
+  };
+
+  const handleCartButton = async (product) => {
     const token = await getToken();
-    if (!token) return;
+    if (!token) {
+      toast.error("Please log in to add items to your cart.", {
+        duration: 1500, // Toast will disappear in 1.5 seconds
+      });
+      return;
+    }
 
-    await saveCartToDB(token, {
-      [product._id]: updatedCart[product._id] || 1,
-    });
+    dispatch(addToCart(product));
 
-    toast.success("Item added to cart");
-    console.log("🛒 Cart synced to DB");
-  } catch (err) {
-    console.error("❌ Failed to update cart in DB:", err.message);
-  }
-};
-const handleCartButton = async (product) => {
-  const token = await getToken();
-  if (!token) {
-    toast.error("Please log in to add items to your cart.", {
-      duration: 1500, // Toast will disappear in 1.5 seconds
-    });
-    return;
-  }
+    const updatedCart = {
+      ...rawCartData,
+      [product._id]: (rawCartData[product._id] || 0) + 1,
+    };
 
-  dispatch(addToCart(product));
-
-  const updatedCart = {
-    ...rawCartData,
-    [product._id]: (rawCartData[product._id] || 0) + 1,
+    updateCartInDB(product, updatedCart);
   };
 
-  updateCartInDB(product, updatedCart);
-}
+  const handleBuyNow = async (product) => {
+    const token = await getToken();
+    if (!token) {
+       toast.error("Please log in to continue with purchase.", {
+        duration: 1500, // Toast will disappear in 1.5 seconds
+      });
+      return;
+    }
 
-const handleBuyNow = async (product) => {
-  const token = await getToken();
-  if (!token) {
-     toast.error("Please log in to continue with purchase.", {
-      duration: 1500, // Toast will disappear in 1.5 seconds
-    });
-    return;
-  }
+    dispatch(addToCart(product));
 
-  dispatch(addToCart(product));
+    const updatedCart = {
+      ...rawCartData,
+      [product._id]: (rawCartData[product._id] || 0) + 1,
+    };
 
-  const updatedCart = {
-    ...rawCartData,
-    [product._id]: (rawCartData[product._id] || 0) + 1,
+    await updateCartInDB(product, updatedCart);
+    router.push("/cart");
   };
-
-  await updateCartInDB(product, updatedCart);
-  router.push("/cart");
-};
 
   const fetchProduct = async () => {
     const product = products.find((product) => product._id === id);

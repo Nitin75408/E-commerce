@@ -11,6 +11,7 @@ export async function POST(request){
     try {
         const {userId} = getAuth(request);
         const {cartdata}=await request.json();
+        console.log('Received cartdata from frontend:', cartdata);
     await connectDB();
     let user = await User.findById(userId);
     if (!user) {
@@ -26,7 +27,8 @@ export async function POST(request){
             cartItems: {}
         });
     }
-    user.cartItems = { ...user.cartItems, ...cartdata };
+    user.cartItems = { ...cartdata };
+    console.log('Saving cartItems to MongoDB:', user.cartItems);
     await user.save();
 
    return NextResponse.json({success:true});

@@ -32,6 +32,7 @@ const initialState = {
   hasFetched : false,
   error : 'idle',
   status : 'idle',
+  isLoading: true,
 };
 
 const cartSlice = createSlice({
@@ -57,6 +58,7 @@ const cartSlice = createSlice({
      setCartItem: (state,action) => {
       state.items = action.payload;
     },
+    reset: () => initialState,
   },
 
 
@@ -64,19 +66,22 @@ const cartSlice = createSlice({
       builder
         .addCase(fetchCartData.pending, (state) => {
           state.status = 'loading';
+          state.isLoading = true;
         })
         .addCase(fetchCartData.fulfilled, (state, action) => {
           state.items = action.payload;
           state.status = 'succeeded';
           state.hasFetched = true;
+          state.isLoading = false;
         })
         .addCase(fetchCartData.rejected, (state, action) => {
           state.status = 'failed';
           state.error = action.payload;
           state.hasFetched = false;
+          state.isLoading = false;
         });
     },
 });
 
-export const { addToCart, updateCartQuantity,   setCartItem } = cartSlice.actions;
+export const { addToCart, updateCartQuantity,   setCartItem, reset } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -3,15 +3,24 @@ import { assets } from '@/assets/assets'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { setRefreshOrders } from '../redux/slices/userSlice'
+import { useDispatch } from 'react-redux'
 
 const OrderPlaced = () => {
 
    const router = useRouter();
+   const dispatch = useDispatch();
 
   useEffect(() => {
     setTimeout(() => {
       router.push('/my-orders')
+     dispatch(setRefreshOrders(true));
     }, 5000)
+
+      setTimeout(() => {
+     dispatch(setRefreshOrders(true));
+    }, 6000)
+     
   }, [])
 
   return (

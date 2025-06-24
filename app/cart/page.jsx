@@ -1,19 +1,18 @@
 'use client';
-import React, { useEffect, useState } from "react";
-import { assets } from "@/assets/assets";
-import OrderSummary from "@/components/OrderSummary";
-import Image from "next/image";
-import Navbar from "@/components/Navbar";
+import React, { useEffect, useState } from 'react';
+import { assets } from '@/assets/assets';
+import OrderSummary from '@/components/OrderSummary';
+import Image from 'next/image';
+import Navbar from '@/components/Navbar';
 import { selectCartCount } from '@/app/redux/selectors/cartselecters';
-import { useSelector, useDispatch } from "react-redux";
-import { updateCartQuantity } from "@/app/redux/slices/CartSlice";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
-import { useAuth } from "@clerk/nextjs";
-import toast from "react-hot-toast";
-import { debounce } from "lodash";
-import FullScreenLoader from "@/components/FullScreenLoader";
+import { useSelector, useDispatch } from 'react-redux';
+import { updateCartQuantity, fetchCartData } from '@/app/redux/slices/CartSlice';
+import { useRouter } from 'next/navigation';
+import { saveCartToDB } from '@/app/redux/api_integration/cartapi';
+import { useAuth } from '@clerk/nextjs';
+import { debounce } from 'lodash';
+import FullScreenLoader from '@/components/FullScreenLoader';
+
 
 const Cart = () => {
   const router = useRouter();
@@ -24,6 +23,7 @@ const Cart = () => {
   const cartItems = useSelector(state => state.cart.items || {});
   const getCartCount = useSelector(selectCartCount);
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
+  const hasFetched = useSelector(state => state.cart.hasFetched);
 
   const [isLoading, setIsLoading] = useState(true);
   const [hasMounted, setHasMounted] = useState(false); // 🟡 prevent initial sync
@@ -63,19 +63,28 @@ const Cart = () => {
       debouncedUpdateCartInDB(token, cartItems);
     };
 
-    if (Object.keys(cartItems).length > 0) {
+    if (Object.keys(cartItems).length >=0) {
       syncCart();
     }
   }, [cartItems]);
+
+
+  useEffect(() => {
+    if (!hasFetched) {
+      getToken().then(token => {
+        if (token) dispatch(fetchCartData(token));
+      });
+    }
+  }, [hasFetched, getToken, dispatch]);
 
   const handleQuantityChange = (id, qty) => {
     dispatch(updateCartQuantity({ id: id, quantity: qty }));
   };
 
-  if (isLoading) return <FullScreenLoader />; // Use a loader instead of null
+  if (!hasFetched) return <FullScreenLoader message="Loading your cart..." />;
 
   // If cart is empty, show a message
-  if (!isLoading && getCartCount === 0) {
+  if (getCartCount === 0) {
     return (
       <>
         <Navbar />
@@ -153,7 +162,7 @@ const Cart = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="py-4 md:px-4 px-1 text-gray-600">${product.offerPrice}</td>
+                      <td className="py-4 md:px-4 px-1 text-gray-600">{currency}{product.offerPrice}</td>
                       <td className="py-4 md:px-4 px-1">
                         <div className="flex items-center md:gap-2 gap-1">
                           <button

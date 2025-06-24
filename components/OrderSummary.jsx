@@ -9,7 +9,7 @@ import { useAuth, useUser } from "@clerk/nextjs"; // ✅ Correct for Next.js
 import axios from "axios";
 import toast from "react-hot-toast";
 import FullScreenLoader from "./FullScreenLoader";
-import {setRefreshOrders} from "@/app/redux/slices/userSlice";
+
 
 const OrderSummary = () => {
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
@@ -27,7 +27,6 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-
   const fetchUserAddresses = async () => {
     try {
       const token = await getToken();
@@ -60,31 +59,32 @@ const OrderSummary = () => {
     setIsDropdownOpen(false);
   };
 
+ 
   const createOrder = async () => {
     if (isPlacingOrder) return;
-
+  
     setIsPlacingOrder(true);
-
+  
     try {
       if (!selectedAddress) {
         toast.error("Please select an address");
         setIsPlacingOrder(false);
         return;
       }
-
+  
       const cartItemsArray = Object.keys(cartItems)
         .map((key) => ({
           product: key,
           quantity: cartItems[key],
         }))
         .filter((item) => item.quantity > 0);
-
+  
       if (cartItemsArray.length === 0) {
         toast.error("Cart is empty");
         setIsPlacingOrder(false);
         return;
       }
-
+  
       const token = await getToken();
       const { data } = await axios.post(
         "/api/order/create",
@@ -96,25 +96,27 @@ const OrderSummary = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      if (data.success) {
-        toast.success(data.message);
-         dispatch(setRefreshOrders(true)); // ✅ set refresh flag
-         router.push("/my-orders");
-         dispatch(setCartItem({}));
+  
+      if (data.success) { 
+        router.push("/order-placed");
+        setTimeout(() => {
+          toast.success(data.message);
+          dispatch(setCartItem({}));
+          setIsPlacingOrder(false);
+        }, 400); // adjust if needed
       } else {
         toast.error(data.message || "Order failed");
+        setIsPlacingOrder(false);
       }
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
-    } finally {
       setIsPlacingOrder(false);
     }
   };
-
+  
   return (
     <>
-      {isPlacingOrder && <FullScreenLoader message="Placing Order..." />}
+    {isPlacingOrder && <FullScreenLoader message="Placing Order..." />}
       <div className="w-full md:w-96 bg-gray-500/5 p-5 relative">
         <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
         <hr className="border-gray-500/30 my-5" />
@@ -188,7 +190,7 @@ const OrderSummary = () => {
               <p className="uppercase text-gray-600">Items {getCartCount}</p>
               <p className="text-gray-800">
                 {currency}
-                {getCartAmount}
+                {getCartAmount.toFixed(2)}
               </p>
             </div>
             <div className="flex justify-between">
@@ -199,14 +201,14 @@ const OrderSummary = () => {
               <p className="text-gray-600">Tax (18%)</p>
               <p className="font-medium text-gray-800">
                 {currency}
-                {Math.floor(getCartAmount * 0.18)}
+                {(getCartAmount * 0.18).toFixed(2)}
               </p>
             </div>
             <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
               <p>Total</p>
               <p>
                 {currency}
-                {getCartAmount + Math.floor(getCartAmount * 0.02)}
+                {(getCartAmount + getCartAmount * 0.18).toFixed(2)}
               </p>
             </div>
           </div>
