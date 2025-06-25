@@ -12,7 +12,6 @@ const AllProducts = () => {
 	const [loading, setLoading] = useState(true);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
-	const [initialLoading, setInitialLoading] = useState(true);
 	
 	// State for filter metadata
 	const [categories, setCategories] = useState([]); 
@@ -21,6 +20,8 @@ const AllProducts = () => {
 	// State for storing the user's selected filters
 	const [selectedCategories, setSelectedCategories] = useState([]);
 	const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 }); 
+
+	const debounceTimeout = useRef();
 
 	// Fetch filter metadata once on page load
 	useEffect(() => {
@@ -39,10 +40,11 @@ const AllProducts = () => {
 		fetchMetadata();
 	}, []);
 
-	// Fetch products when filters or page change
+	// Fetch products when filters or page change, with debounce for priceRange
 	useEffect(() => {
+		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+		setLoading(true); // Set loading immediately on filter change
 		const fetchProducts = async () => {
-		  if (initialLoading) setLoading(true);
 			const params = new URLSearchParams();
 			params.append('page', currentPage);
 			if (selectedCategories.length > 0) {
@@ -61,14 +63,13 @@ const AllProducts = () => {
 				console.error("Failed to fetch products", error);
 			} finally {
 				setLoading(false);
-				 if (initialLoading) setInitialLoading(false);
 			}
 		};
-		
 		// Only fetch if metadata has been loaded
-		if (priceMetadata.max > 1000) { // A check to see if metadata is loaded
-			 fetchProducts();
+		if (priceMetadata.max > 1000) {
+			debounceTimeout.current = setTimeout(fetchProducts, 300);
 		}
+		return () => clearTimeout(debounceTimeout.current);
 	}, [currentPage, selectedCategories, priceRange, priceMetadata]);
 
 	
