@@ -14,7 +14,6 @@ const OrderPlaced = () => {
   useEffect(() => {
     setTimeout(() => {
       router.push('/my-orders')
-     dispatch(setRefreshOrders(true));
     }, 5000)
 
       setTimeout(() => {

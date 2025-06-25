@@ -4,14 +4,15 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
-import axios from 'axios';
 import FullScreenLoader from "@/components/FullScreenLoader";
+import axios from 'axios';
 
 const AllProducts = () => {
 	const [products, setProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
+	const [initialLoading, setInitialLoading] = useState(true);
 	
 	// State for filter metadata
 	const [categories, setCategories] = useState([]); 
@@ -41,7 +42,7 @@ const AllProducts = () => {
 	// Fetch products when filters or page change
 	useEffect(() => {
 		const fetchProducts = async () => {
-			setLoading(true);
+		  if (initialLoading) setLoading(true);
 			const params = new URLSearchParams();
 			params.append('page', currentPage);
 			if (selectedCategories.length > 0) {
@@ -60,6 +61,7 @@ const AllProducts = () => {
 				console.error("Failed to fetch products", error);
 			} finally {
 				setLoading(false);
+				 if (initialLoading) setInitialLoading(false);
 			}
 		};
 		
@@ -68,6 +70,11 @@ const AllProducts = () => {
 			 fetchProducts();
 		}
 	}, [currentPage, selectedCategories, priceRange, priceMetadata]);
+
+	
+if (initialLoading) {
+    return <FullScreenLoader message="Loading your products..." />;
+}
 
 	return (
 		<>
@@ -80,6 +87,7 @@ const AllProducts = () => {
 					minPrice={priceMetadata.min} 
 					maxPrice={priceMetadata.max} 
 				/>
+
 				<main className="flex-1 p-4">
 					<div className="flex items-center justify-between mb-4">
 						<h1 className="text-2xl font-medium">All Products</h1>
@@ -87,11 +95,11 @@ const AllProducts = () => {
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
 					
-					{loading ? <FullScreenLoader message="Loading products..." /> : (
+					
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 							{products.map((product) => <ProductCard key={product._id} product={product} />)}
 						</div>
-					)}
+					
 					
 					<div className="flex justify-between items-center mt-10">
 						<button

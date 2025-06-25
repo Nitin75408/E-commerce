@@ -17,9 +17,26 @@ export async function GET(request) {
 
     await connectDB();
 
-    const orders = await Order.find({ }).populate('address items.product');
+    // First, get all products created by this seller
+    const sellerProducts = await Product.find({ userId: userId });
+    const sellerProductIds = sellerProducts.map(product => product._id.toString());
 
-    return NextResponse.json({ success: true, orders });
+    // Then, find orders that contain any of the seller's products
+    const orders = await Order.find({
+      'items.product': { $in: sellerProductIds }
+    }).populate('address items.product');
+
+    // Filter out deleted products from order items
+    const filteredOrders = orders
+      .map(order => {
+        const filteredItems = order.items.filter(item => item.product !== null);
+        return { ...order.toObject(), items: filteredItems };
+      })
+      .filter(order => order.items.length > 0);
+
+    console.log(`Found ${filteredOrders.length} orders for seller ${userId} with ${sellerProductIds.length} products`);
+
+    return NextResponse.json({ success: true, orders: filteredOrders });
   } catch (error) {
     console.error("Seller orders API error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

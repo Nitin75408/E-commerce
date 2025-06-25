@@ -1,21 +1,45 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ProductCard from "./ProductCard";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import { fetchProducts } from "@/app/redux/slices/ProductSlice";
 
 const HomeProducts = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  const  products = useSelector((state)=>state.products.items);
-  console.log(products);
+  const { items: products, status, hasFetched } = useSelector((state) => state.products);
+  const loading = status === 'loading';
+  
+  console.log('HomeProducts - products:', products?.length);
+  console.log('HomeProducts - hasFetched:', hasFetched);
+  
+  // Fetch products if not already fetched
+  useEffect(() => {
+    if (!hasFetched) {
+      console.log('HomeProducts - Fetching products...');
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, hasFetched]);
   
   // Safety check for undefined products
-  if (!products) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
         <div className="flex justify-center items-center h-32">
           <p className="text-gray-500">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="flex flex-col items-center pt-14">
+        <p className="text-2xl font-medium text-left w-full">Popular products</p>
+        <div className="flex justify-center items-center h-32">
+          <p className="text-gray-500">No products available</p>
         </div>
       </div>
     );

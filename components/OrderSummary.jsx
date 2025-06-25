@@ -100,10 +100,10 @@ const OrderSummary = () => {
       if (data.success) { 
         router.push("/order-placed");
         setTimeout(() => {
-          toast.success(data.message);
+           toast.success(data.message);
           dispatch(setCartItem({}));
           setIsPlacingOrder(false);
-        }, 400); // adjust if needed
+        }, 3000); // adjust if needed
       } else {
         toast.error(data.message || "Order failed");
         setIsPlacingOrder(false);

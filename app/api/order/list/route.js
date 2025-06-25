@@ -17,7 +17,15 @@ export async function GET(request) {
 
     const orders = await Order.find({ userId }).populate('address items.product');
 
-    return NextResponse.json({ success: true, orders });
+    // Filter out deleted products from order items
+    const filteredOrders = orders
+      .map(order => {
+        const filteredItems = order.items.filter(item => item.product !== null);
+        return { ...order.toObject(), items: filteredItems };
+      })
+      .filter(order => order.items.length > 0);
+
+    return NextResponse.json({ success: true, orders: filteredOrders });
   } catch (error) {
     console.error("Fetch orders error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
