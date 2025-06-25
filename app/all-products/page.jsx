@@ -2,7 +2,7 @@
 import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
 import FullScreenLoader from "@/components/FullScreenLoader";
 import axios from 'axios';
