@@ -10,6 +10,7 @@ import FullScreenLoader from "@/components/FullScreenLoader";
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
+import { setProducts } from "@/app/redux/slices/ProductSlice";
 import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
@@ -28,6 +29,7 @@ const Product = () => {
   const [cartData, setCartData] = useState({});
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);
+  const [loadingProduct, setLoadingProduct] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,6 +38,32 @@ const Product = () => {
 
     return () => clearTimeout(timer);
   }, [rawCartData]);
+
+  // Smart cache: if product not found in Redux, fetch from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoadingProduct(true);
+      // Try Redux first
+      let product = products.find((product) => product._id === id);
+      if (!product) {
+        // Fallback: fetch from API
+        try {
+          const res = await fetch(`/api/product/list?id=${id}`);
+          const data = await res.json();
+          if (data.success && data.products && data.products.length > 0) {
+            product = data.products[0];
+            // Optionally, add to Redux for future
+            dispatch(setProducts([...products, product]));
+          }
+        } catch (err) {
+          // ignore, will show loading
+        }
+      }
+      setProductData(product || null);
+      setLoadingProduct(false);
+    };
+    fetchProduct();
+  }, [id, products, dispatch]);
 
   const updateCartInDB = async (product, updatedCart) => {
     try {
@@ -90,14 +118,9 @@ const Product = () => {
     router.push("/cart");
   };
 
-  const fetchProduct = async () => {
-    const product = products.find((product) => product._id === id);
-    setProductData(product);
-  };
-
-  useEffect(() => {
-    fetchProduct();
-  }, [id, products.length]);
+  if (loadingProduct || !productData) {
+    return <FullScreenLoader message=" loading Product.." />;
+  }
 
   return productData ? (
     <>

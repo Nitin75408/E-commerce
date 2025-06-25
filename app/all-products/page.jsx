@@ -6,16 +6,19 @@ import { useState, useEffect,useRef } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
 import FullScreenLoader from "@/components/FullScreenLoader";
 import axios from 'axios';
+import { useSelector, useDispatch } from "react-redux";
+import { fetchProducts, fetchFilteredProducts } from "@/app/redux/slices/ProductSlice";
+
+const STALE_TIME = 60 * 1000; // 1 minute
 
 const AllProducts = () => {
-	const [products, setProducts] = useState([]);
-	const [loading, setLoading] = useState(true);
+	const dispatch = useDispatch();
+	const { items: products, status, hasFetched, lastFetched, totalPages } = useSelector((state) => state.products);
+	const loading = status === 'loading';
 	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
 	const [initialLoading, setInitialLoading] = useState(true);
-	
 	const debounceTimeout = useRef();
-	
+
 	// State for filter metadata
 	const [categories, setCategories] = useState([]); 
 	const [priceMetadata, setPriceMetadata] = useState({ min: 0, max: 1000 });
@@ -41,46 +44,36 @@ const AllProducts = () => {
 		fetchMetadata();
 	}, []);
 
-	// Fetch products when filters or page change
+	// Smart cache: fetch if never fetched, or stale, or empty
+	useEffect(() => {
+		const now = Date.now();
+		const isStale = !lastFetched || (now - lastFetched > STALE_TIME);
+		if (!hasFetched || isStale || !products || products.length === 0) {
+			dispatch(fetchProducts());
+		}
+	}, [dispatch, hasFetched, lastFetched, products]);
+
+	// Fetch products when filters or page change, with debounce for priceRange
 	useEffect(() => {
 		if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-		const fetchProducts = async () => {
-		  if (initialLoading) setLoading(true);
-			const params = new URLSearchParams();
-			params.append('page', currentPage);
-			if (selectedCategories.length > 0) {
-				params.append('categories', selectedCategories.join(','));
-			}
-			params.append('minPrice', priceRange.min);
-			params.append('maxPrice', priceRange.max);
-
-			try {
-				const { data } = await axios.get(`/api/product/list?${params.toString()}`);
-				if (data.success) {
-					setProducts(data.products);
-					setTotalPages(data.totalPages);
-				}
-			} catch (error) {
-				console.error("Failed to fetch products", error);
-			} finally {
-				setLoading(false);
-				 if (initialLoading) setInitialLoading(false);
-			}
+		const fetchFiltered = async () => {
+			dispatch(fetchFilteredProducts({
+				page: currentPage,
+				categories: selectedCategories,
+				minPrice: priceRange.min,
+				maxPrice: priceRange.max
+			}));
+			setInitialLoading(false);
 		};
-		
-		// Only fetch if metadata has been loaded
-			if (priceMetadata.max > 1000) {
-			debounceTimeout.current = setTimeout(fetchProducts, 300);
+		if (priceMetadata.max > 1000) {
+			debounceTimeout.current = setTimeout(fetchFiltered, 300);
 		}
 		return () => clearTimeout(debounceTimeout.current);
-	}, [currentPage, selectedCategories, priceRange, priceMetadata]);
+	}, [currentPage, selectedCategories, priceRange, priceMetadata, dispatch]);
 
-	
-
-	
-if (initialLoading) {
-    return <FullScreenLoader message="Loading your products..." />;
-}
+	if (initialLoading || loading) {
+		return <FullScreenLoader message="Loading your products..." />;
+	}
 
 	return (
 		<>
@@ -93,20 +86,15 @@ if (initialLoading) {
 					minPrice={priceMetadata.min} 
 					maxPrice={priceMetadata.max} 
 				/>
-
 				<main className="flex-1 p-4">
 					<div className="flex items-center justify-between mb-4">
 						<h1 className="text-2xl font-medium">All Products</h1>
 						<p className="text-gray-500">{products.length} results on this page</p>
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
-					
-					
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-							{products.map((product) => <ProductCard key={product._id} product={product} />)}
-						</div>
-					
-					
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+						{products.map((product) => <ProductCard key={product._id} product={product} />)}
+					</div>
 					<div className="flex justify-between items-center mt-10">
 						<button
 							onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

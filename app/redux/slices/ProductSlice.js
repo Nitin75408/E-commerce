@@ -69,12 +69,14 @@ const productSlice = createSlice({
     totalPages: 1,
     sellerTotalPages: 1,
     currentPage: 1,
+    lastFetched: null,
   },
   reducers: {
     setProducts: (state, action) => {
       state.items = action.payload;
       state.hasFetched = true;
       state.status = 'succeeded';
+      state.lastFetched = Date.now();
     },
     setSellerProducts: (state, action) => {
       // Handle both single products array and object with metadata
@@ -98,6 +100,7 @@ const productSlice = createSlice({
       state.hasFetched = false;
       state.status = 'idle';
       state.error = null;
+      state.lastFetched = null;
     },
     clearSellerProducts: (state) => {
       state.sellerItems = [];
@@ -117,6 +120,7 @@ const productSlice = createSlice({
         state.status = 'succeeded';
         state.hasFetched = true;
         state.error = null;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = 'failed';
@@ -132,6 +136,7 @@ const productSlice = createSlice({
         state.status = 'succeeded';
         state.hasFetched = true;
         state.error = null;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchFilteredProducts.rejected, (state, action) => {
         state.status = 'failed';
@@ -158,3 +163,4 @@ const productSlice = createSlice({
 
 export const { setProducts, setSellerProducts, removeProduct, clearProducts, clearSellerProducts } = productSlice.actions;
 export default productSlice.reducer;
+
