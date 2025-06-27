@@ -3,24 +3,60 @@ import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, reviewSummary }) => {
     const router  = useRouter();
     const currency = process.env.NEXT_PUBLIC_CURRENCY
     
+    // Helper to render stars based on avgRating
+    const renderStars = (avgRating) => {
+        const fullStars = Math.floor(avgRating);
+        const halfStar = avgRating - fullStars >= 0.5;
+        return Array.from({ length: 5 }).map((_, index) => {
+            if (index < fullStars) {
+                return (
+                    <Image
+                        key={index}
+                        className="h-3 w-3"
+                        src={assets.star_icon}
+                        alt="star_icon"
+                    />
+                );
+            } else if (index === fullStars && halfStar) {
+                return (
+                    <Image
+                        key={index}
+                        className="h-3 w-3 opacity-50"
+                        src={assets.star_icon}
+                        alt="star_icon"
+                    />
+                );
+            } else {
+                return (
+                    <Image
+                        key={index}
+                        className="h-3 w-3"
+                        src={assets.star_dull_icon}
+                        alt="star_icon"
+                    />
+                );
+            }
+        });
+    };
+
     return (
         <div
             onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}
-            className="flex flex-col items-start gap-0.5 max-w-[200px] w-full cursor-pointer"
+            className="flex flex-col items-start gap-1 w-full cursor-pointer group"
         >
-            <div className="cursor-pointer group relative bg-gray-500/10 rounded-lg w-full h-52 flex items-center justify-center">
+            <div className="cursor-pointer relative bg-gray-500/10 rounded-lg w-full h-48 sm:h-52 flex items-center justify-center overflow-hidden">
                 <Image
                     src={product.image[0]}
                     alt={product.name}
-                    className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 md:w-full md:h-full"
+                    className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 sm:w-full sm:h-full"
                     width={800}
                     height={800}
                 />
-                <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md">
+                <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition">
                     <Image
                         className="h-3 w-3"
                         src={assets.heart_icon}
@@ -29,31 +65,40 @@ const ProductCard = ({ product }) => {
                 </button>
             </div>
 
-            <p className="md:text-base font-medium pt-2 w-full truncate">{product.name}</p>
-            <p className="w-full text-xs text-gray-500/70 max-sm:hidden truncate">{product.description}</p>
-            <div className="flex items-center gap-2">
-                <p className="text-xs">{4.5}</p>
-                <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                        <Image
-                            key={index}
-                            className="h-3 w-3"
-                            src={
-                                index < Math.floor(4)
-                                    ? assets.star_icon
-                                    : assets.star_dull_icon
-                            }
-                            alt="star_icon"
-                        />
-                    ))}
-                </div>
-            </div>
-
-            <div className="flex items-end justify-between w-full mt-1">
-                <p className="text-base font-medium">{currency}{product.offerPrice}</p>
-                <button className=" max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition">
+            <div className="w-full space-y-1">
+                <p className="text-sm sm:text-base font-medium leading-tight overflow-hidden" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    minHeight: '2.5rem',
+                    lineHeight: '1.25rem'
+                }}>
+                    {product.name}
+                </p>
+                <p className="text-xs text-gray-500/70 hidden sm:block overflow-hidden" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
+                }}>
+                    {product.description}
+                </p>
+                {/* Review summary: green box with avg rating and one star, then review count */}
+                {reviewSummary && reviewSummary.reviewCount > 0 && (
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                            {reviewSummary.avgRating}
+                            <Image className="h-3 w-3" src={assets.star_icon} alt="star_icon" style={{ filter: 'brightness(0) invert(1)' }} />
+                        </span>
+                        <span className="text-xs text-gray-600 font-medium">({reviewSummary.reviewCount})</span>
+                    </div>
+                )}
+                {/* End review summary */}
+                <div className="flex items-end justify-between w-full pt-1">
+                    <p className="text-sm sm:text-base font-medium">{currency}{product.offerPrice}</p>
+                    <button className="hidden sm:block px-3 py-1 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition">
                     Buy now
                 </button>
+                </div>
             </div>
         </div>
     )

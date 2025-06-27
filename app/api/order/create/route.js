@@ -13,6 +13,53 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "Invalid data" });
     }
 
+    // Special handling for cart validation (dummy check)
+    if (address === "check-only") {
+      // Check if all products exist
+      const productChecks = await Promise.all(
+        items.map(async (item) => {
+          const product = await Product.findById(item.product);
+          return {
+            productId: item.product,
+            exists: !!product,
+            product: product
+          };
+        })
+      );
+
+      // Find deleted products
+      const deletedProducts = productChecks.filter(check => !check.exists);
+
+      return NextResponse.json({ 
+        success: deletedProducts.length === 0, 
+        message: deletedProducts.length === 0 ? "All products available" : "Some products are no longer available",
+        deletedProducts: deletedProducts.map(p => p.productId)
+      });
+    }
+
+    // Check if all products exist
+    const productChecks = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findById(item.product);
+        return {
+          productId: item.product,
+          exists: !!product,
+          product: product
+        };
+      })
+    );
+
+    // Find deleted products
+    const deletedProducts = productChecks.filter(check => !check.exists);
+    
+    if (deletedProducts.length > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Some products are no longer available",
+        deletedProducts: deletedProducts.map(p => p.productId)
+      });
+    }
+
     // ✅ Calculate amount correctly using Promise.all
     const prices = await Promise.all(
       items.map(async (item) => {

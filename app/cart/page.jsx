@@ -1,18 +1,19 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import { assets } from '@/assets/assets';
 import OrderSummary from '@/components/OrderSummary';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import { selectCartCount } from '@/app/redux/selectors/cartselecters';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateCartQuantity, fetchCartData } from '@/app/redux/slices/CartSlice';
+import { updateCartQuantity, fetchCartData, setCartItem } from '@/app/redux/slices/CartSlice';
 import { useRouter } from 'next/navigation';
 import { saveCartToDB } from '@/app/redux/api_integration/cartapi';
 import { useAuth } from '@clerk/nextjs';
 import { debounce } from 'lodash';
 import FullScreenLoader from '@/components/FullScreenLoader';
-
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const Cart = () => {
   const router = useRouter();
@@ -24,15 +25,74 @@ const Cart = () => {
   const getCartCount = useSelector(selectCartCount);
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
   const hasFetched = useSelector(state => state.cart.hasFetched);
+const deletedToastProductsRef = useRef(new Set());
 
-  const [isLoading, setIsLoading] = useState(true);
+
+
   const [hasMounted, setHasMounted] = useState(false); // 🟡 prevent initial sync
+  const [hasCheckedDeletedProducts, setHasCheckedDeletedProducts] = useState(false);
 
-  // Delay rendering until after hydration
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 50);
-    return () => clearTimeout(timer);
-  }, []);
+
+  // Function to check for deleted products and remove them
+  const checkForDeletedProducts = async () => {
+    if (Object.keys(cartItems).length === 0 || hasCheckedDeletedProducts) return;
+    try {
+      const token = await getToken();
+      const cartItemsArray = Object.keys(cartItems)
+        .map((key) => ({
+          product: key,
+          quantity: cartItems[key],
+        }))
+        .filter((item) => item.quantity > 0);
+      if (cartItemsArray.length === 0) return;
+      const { data } = await axios.post(
+        "/api/order/create",
+        {
+          address: "check-only", // Dummy address for validation
+          items: cartItemsArray,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (
+        !data.success &&
+        data.deletedProducts &&
+        data.deletedProducts.length > 0
+      ) {
+        // Only show toast for products not already shown (use ref for sync deduplication)
+        const newDeleted = data.deletedProducts.filter(
+          id => !deletedToastProductsRef.current.has(id)
+        );
+        if (newDeleted.length > 0) {
+          toast.error("Some products are no longer available and have been removed from your cart");
+          newDeleted.forEach(id => deletedToastProductsRef.current.add(id));
+        }
+        // Remove deleted products from cart
+        const updatedCart = { ...cartItems };
+        data.deletedProducts.forEach(productId => {
+          delete updatedCart[productId];
+        });
+        // Update cart in Redux
+        dispatch(setCartItem(updatedCart));
+        // Save updated cart to database
+        try {
+          await axios.post(
+            "/api/cart/update",
+            { cartdata: updatedCart },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (error) {
+          console.error("Failed to update cart after removing deleted products:", error);
+        }
+      }
+      setHasCheckedDeletedProducts(true);
+    } catch (error) {
+      console.error("Error checking for deleted products:", error);
+      setHasCheckedDeletedProducts(true);
+    }
+  };
+  // ... existing code ...
 
   // Debounced function
   const debouncedUpdateCartInDB = debounce(async (token, cartData) => {
@@ -44,11 +104,11 @@ const Cart = () => {
     }
   }, 500);
 
-//   Imagine you're typing a message in WhatsApp, and WhatsApp tries to save your draft to the cloud every single keystroke — that’s inefficient.
+//   Imagine you're typing a message in WhatsApp, and WhatsApp tries to save your draft to the cloud every single keystroke — that's inefficient.
 
 // So instead, it waits until you stop typing for 500ms — then it syncs.
 
-// That’s debouncing.
+// That's debouncing.
 
   // Sync cart to DB (but avoid initial hydration trigger)
   useEffect(() => {
@@ -68,14 +128,23 @@ const Cart = () => {
     }
   }, [cartItems]);
 
-
   useEffect(() => {
     if (!hasFetched) {
       getToken().then(token => {
         if (token) dispatch(fetchCartData(token));
       });
+    } else {
+      // Reset the flag when cart data is fresh
+      setHasCheckedDeletedProducts(false);
     }
   }, [hasFetched, getToken, dispatch]);
+
+  // Check for deleted products when cart loads
+  useEffect(() => {
+    if (hasFetched && Object.keys(cartItems).length > 0) {
+      checkForDeletedProducts();
+    }
+  }, [hasFetched, cartItems]);
 
   const handleQuantityChange = (id, qty) => {
     dispatch(updateCartQuantity({ id: id, quantity: qty }));

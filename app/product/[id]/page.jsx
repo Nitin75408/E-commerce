@@ -15,6 +15,7 @@ import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import ReviewSection from "@/components/ReviewSection";
+import axios from 'axios';
 
 const Product = () => {
   const { id } = useParams();
@@ -30,6 +31,7 @@ const Product = () => {
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
+  const [reviewSummary, setReviewSummary] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,6 +66,24 @@ const Product = () => {
     };
     fetchProduct();
   }, [id, products, dispatch]);
+
+  useEffect(() => {
+    if (id) {
+      const fetchReviewSummary = async () => {
+        try {
+          const { data } = await axios.post('/api/review/summary', { productIds: [id] });
+          if (data.success && data.summary && data.summary[id]) {
+            setReviewSummary(data.summary[id]);
+          } else {
+            setReviewSummary(null);
+          }
+        } catch (error) {
+          setReviewSummary(null);
+        }
+      };
+      fetchReviewSummary();
+    }
+  }, [id]);
 
   const updateCartInDB = async (product, updatedCart) => {
     try {
@@ -119,7 +139,7 @@ const Product = () => {
   };
 
   if (loadingProduct || !productData) {
-    return <FullScreenLoader message=" loading Product.." />;
+    return <FullScreenLoader message="Loading product details.."/>;
   }
 
   return productData ? (
@@ -161,20 +181,17 @@ const Product = () => {
             <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
               {productData.name}
             </h1>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-0.5">
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_dull_icon}
-                  alt="star_dull_icon"
-                />
+            {reviewSummary && reviewSummary.reviewCount > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                  {reviewSummary.avgRating}
+                  <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" style={{ filter: 'brightness(0) invert(1)' }} />
+                </span>
+                <span className="text-base text-gray-600 font-medium">
+                  {reviewSummary.reviewCount} Ratings & {reviewSummary.reviewCount} Reviews
+                </span>
               </div>
-              <p>(4.5)</p>
-            </div>
+            )}
             <p className="text-gray-600 mt-3">{productData.description}</p>
             <p className="text-3xl font-medium mt-6">
               {currency}{productData.offerPrice}
@@ -248,7 +265,7 @@ const Product = () => {
       <Footer />
     </>
   ) : (
-    <FullScreenLoader message="Loading product details..." />
+    < FullScreenLoader message="Loading product details..." />
   );
 };
 

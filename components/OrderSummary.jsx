@@ -60,7 +60,7 @@ const OrderSummary = () => {
   };
 
  
-  const createOrder = async () => {
+    const createOrder = async () => {
     if (isPlacingOrder) return;
   
     setIsPlacingOrder(true);
@@ -100,12 +100,37 @@ const OrderSummary = () => {
       if (data.success) { 
         router.push("/order-placed");
         setTimeout(() => {
-           toast.success(data.message);
+          toast.success(data.message);
           dispatch(setCartItem({}));
           setIsPlacingOrder(false);
-        }, 3000); // adjust if needed
+        }, 400); // adjust if needed
       } else {
-        toast.error(data.message || "Order failed");
+        // Handle deleted products
+        if (data.deletedProducts && data.deletedProducts.length > 0) {
+          // Remove deleted products from cart
+          const updatedCart = { ...cartItems };
+          data.deletedProducts.forEach(productId => {
+            delete updatedCart[productId];
+          });
+          
+          // Update cart in Redux
+          dispatch(setCartItem(updatedCart));
+          
+          // Save updated cart to database
+          try {
+            await axios.post("/api/cart/update", 
+              { cartdata: updatedCart },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          } catch (error) {
+            console.error("Failed to update cart after removing deleted products:", error);
+          }
+          
+          // Show error message
+          toast.error(data.message);
+        } else {
+          toast.error(data.message || "Order failed");
+        }
         setIsPlacingOrder(false);
       }
     } catch (error) {

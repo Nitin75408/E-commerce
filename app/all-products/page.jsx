@@ -27,6 +27,9 @@ const AllProducts = () => {
 	const [selectedCategories, setSelectedCategories] = useState([]);
 	const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 }); 
 
+	// State for storing review summaries
+	const [reviewSummaries, setReviewSummaries] = useState({});
+
 	// Fetch filter metadata once on page load
 	useEffect(() => {
 		const fetchMetadata = async () => {
@@ -71,6 +74,24 @@ const AllProducts = () => {
 		return () => clearTimeout(debounceTimeout.current);
 	}, [currentPage, selectedCategories, priceRange, priceMetadata, dispatch]);
 
+	// Fetch review summaries after products are loaded
+	useEffect(() => {
+		if (products && products.length > 0) {
+			const fetchReviewSummaries = async () => {
+				try {
+					const productIds = products.map(p => p._id);
+					const { data } = await axios.post('/api/review/summary', { productIds });
+					if (data.success) {
+						setReviewSummaries(data.summary);
+					}
+				} catch (error) {
+					console.error('Failed to fetch review summaries', error);
+				}
+			};
+			fetchReviewSummaries();
+		}
+	}, [products]);
+
 	if (initialLoading || loading) {
 		return <FullScreenLoader message="Loading your products..." />;
 	}
@@ -93,7 +114,13 @@ const AllProducts = () => {
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-						{products.map((product) => <ProductCard key={product._id} product={product} />)}
+						{products.map((product) => (
+							<ProductCard
+								key={product._id}
+								product={product}
+								reviewSummary={reviewSummaries[product._id]}
+							/>
+						))}
 					</div>
 					<div className="flex justify-between items-center mt-10">
 						<button

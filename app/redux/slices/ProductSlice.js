@@ -108,6 +108,9 @@ const productSlice = createSlice({
       state.sellerStatus = 'idle';
       state.sellerError = null;
     },
+    resetLastFetched: (state) => {
+      state.lastFetched = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -157,10 +160,18 @@ const productSlice = createSlice({
       .addCase(fetchSellerProducts.rejected, (state, action) => {
         state.sellerStatus = 'failed';
         state.sellerError = action.payload;
-      });
+      })
+      // Handle rehydration from persistence
+      .addMatcher(
+        (action) => action.type === 'persist/REHYDRATE',
+        (state) => {
+          // Reset lastFetched when store rehydrates to ensure fresh data on page load
+          state.lastFetched = null;
+        }
+      );
   },
 });
 
-export const { setProducts, setSellerProducts, removeProduct, clearProducts, clearSellerProducts } = productSlice.actions;
+export const { setProducts, setSellerProducts, removeProduct, clearProducts, clearSellerProducts, resetLastFetched } = productSlice.actions;
 export default productSlice.reducer;
 

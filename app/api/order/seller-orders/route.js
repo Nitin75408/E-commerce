@@ -5,6 +5,7 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 export async function GET(request) {
   try {
@@ -22,9 +23,19 @@ export async function GET(request) {
     const sellerProductIds = sellerProducts.map(product => product._id.toString());
 
     // Then, find orders that contain any of the seller's products
-    const orders = await Order.find({
+    let orders = await Order.find({
       'items.product': { $in: sellerProductIds }
-    }).populate('address items.product');
+    });
+
+    // Filter out orders with invalid address or items.product
+    orders = orders.filter(order => {
+      if (!order.address || !mongoose.Types.ObjectId.isValid(order.address)) return false;
+      if (!order.items.every(item => mongoose.Types.ObjectId.isValid(item.product))) return false;
+      return true;
+    });
+
+    // Now safely populate
+    orders = await Order.populate(orders, { path: 'address items.product' });
 
     // Filter out deleted products from order items
     const filteredOrders = orders
