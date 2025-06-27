@@ -137,7 +137,7 @@ export const createUserOrder = inngest.createFunction(
   
           // Send the email
           await resend.emails.send({
-            from: "Your Store <noreply@yourstore.com>",
+           from: "onboarding@resend.dev",
             to: email,
             subject: "Product Now Active!",
             html: `<p>The product you requested is now active. <a href=\"${process.env.NEXT_PUBLIC_BASE_URL}/product/${productId}\">View Product</a></p>`
