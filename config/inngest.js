@@ -126,6 +126,7 @@ export const createUserOrder = inngest.createFunction(
   
       // 2. Set up Resend client
       const resend = new Resend(process.env.RESEND_API_KEY);
+      console.log("Resend client initialized with API key:", process.env.RESEND_API_KEY);
       
     // 3. Notify each user
     for (const entry of notifyEntries) {
@@ -152,9 +153,14 @@ export const createUserOrder = inngest.createFunction(
         }
       }
   
-      return {  message: "Notifications sent.",
+     return {  message: "Notifications sent.",
         productId,
-        notifyEntriesCount: notifyEntries.length,
-        notifiedUserIds: notifyEntries.map(e => e.userId), };
+        resendKey: process.env.RESEND_API_KEY,
+        mongoUri: process.env.MONGODB_URI,
+        clerkKey: process.env.CLERK_SECRET_KEY,
+        baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+        notifyEntriesCount: notifyEntries.length, 
+        resend:process.env.RESEND_API_KEY,
+        notifiedUserIds: notifyEntries.map(e => e.userId)};
     }
   );
