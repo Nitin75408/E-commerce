@@ -110,7 +110,7 @@ export const createUserOrder = inngest.createFunction(
     
 )
 
-export const notifyUsersOnProductActivated = inngest.createFunction(
+ export const notifyUsersOnProductActivated = inngest.createFunction(
     { id: "notify-users-on-product-activated" },
     { event: "product.activated" },
     async ({ event }) => {
