@@ -9,7 +9,8 @@ const ProductSchema = new mongoose.Schema({
     offerPrice:{type : Number , required : true},
     image :{type : Array , required : true},
     category :{type : String , required : true},
-    date :{type : Number ,required:true}
+    date :{type : Number ,required:true},
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' }
 })
 
 

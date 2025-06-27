@@ -32,6 +32,8 @@ const Product = () => {
   const [productData, setProductData] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [reviewSummary, setReviewSummary] = useState(null);
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -138,8 +140,30 @@ const Product = () => {
     router.push("/cart");
   };
 
+  const handleNotifyMe = async () => {
+    setNotifyLoading(true);
+    try {
+      const res = await fetch("/api/notify-me", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: productData._id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || "You will be notified!");
+        setNotifySuccess(true);
+      } else {
+        toast.error(data.message || "Failed to subscribe for notification.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong.");
+    } finally {
+      setNotifyLoading(false);
+    }
+  };
+
   if (loadingProduct || !productData) {
-    return <FullScreenLoader message="Loading product details.."/>;
+    return < FullScreenLoader message=" Loading product details..."/>;
   }
 
   return productData ? (
@@ -219,24 +243,38 @@ const Product = () => {
               </table>
             </div>
 
-            <div className="flex items-center mt-10 gap-4">
-              <button
-                onClick={() => {
-                  handleCartButton(productData);
-                }}
-                className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => {
-                  handleBuyNow(productData);
-                }}
-                className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition"
-              >
-                Buy now
-              </button>
-            </div>
+            {productData.status === 'inactive' ? (
+              <div className="flex items-center mt-10 gap-4">
+                <button
+                  className="w-full py-3.5 bg-gray-100 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  Add to Cart
+                </button>
+                <button
+                  className={`w-full py-3.5 ${notifySuccess ? "bg-green-500" : "bg-blue-500"} text-white hover:bg-blue-600 transition`}
+                  onClick={handleNotifyMe}
+                  disabled={notifyLoading || notifySuccess}
+                >
+                  {notifySuccess ? "Subscribed!" : notifyLoading ? "Please wait..." : "Notify Me"}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center mt-10 gap-4">
+                <button
+                  onClick={() => handleCartButton(productData)}
+                  className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => handleBuyNow(productData)}
+                  className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition"
+                >
+                  Buy now
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -265,8 +303,9 @@ const Product = () => {
       <Footer />
     </>
   ) : (
-    < FullScreenLoader message="Loading product details..." />
+    < FullScreenLoader message=" Loading product details..."/>
   );
 };
 
 export default Product;
+

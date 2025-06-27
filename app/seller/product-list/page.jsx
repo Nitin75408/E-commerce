@@ -3,7 +3,7 @@ import React, { useEffect,useState } from "react";
 import { assets, productsDummyData } from "@/assets/assets";
 import Image from "next/image";
 import Footer from "@/components/seller/Footer";
-import Loading from "@/components/Loading";
+import FullScreenLoader from "@/components/FullScreenLoader";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
@@ -28,6 +28,7 @@ const ProductList = () => {
    
    const isSeller = useSelector((state)=>state.user.isSeller);
    const { isLoaded  } = useUser();
+   const [statusLoadingId, setStatusLoadingId] = useState(null);
 
 const fetchSellerProduct = async (page = 1) => {
   try {
@@ -147,9 +148,64 @@ const openUpdateModal = (product) => {
   setOpenMenu(null);
 };
 
+const handleStatusToggle = async (product) => {
+  const newStatus = product.status === 'active' ? 'inactive' : 'active';
+  const updatedProduct = { ...product, status: newStatus };
+
+  // Optimistically update in Redux
+  const updatedSellerProducts = products.map(p =>
+    p._id === product._id ? updatedProduct : p
+  );
+  dispatch(setSellerProducts({
+    products: updatedSellerProducts,
+    totalPages: totalPages,
+    currentPage: currentPage
+  }));
+
+  setStatusLoadingId(product._id);
+
+  try {
+    const token = await getToken();
+    const { data } = await axios.put('/api/product/update-status', {
+      productId: product._id,
+      status: newStatus,
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (data.success) {
+      toast.success(`Product status updated to ${newStatus}.`);
+      // Use the updatedSellerProducts array to avoid reverting the UI
+      const syncedProducts = updatedSellerProducts.map(p =>
+        p._id === product._id ? { ...p, ...data.product } : p
+      );
+      dispatch(setSellerProducts({
+        products: syncedProducts,
+        totalPages: totalPages,
+        currentPage: currentPage
+      }));
+    } else {
+      throw new Error(data.message || 'Failed to update status');
+    }
+  } catch (error) {
+    // Revert UI on error
+    const revertedProducts = products.map(p =>
+      p._id === product._id ? product : p
+    );
+    dispatch(setSellerProducts({
+      products: revertedProducts,
+      totalPages: totalPages,
+      currentPage: currentPage
+    }));
+    toast.error(error.message || 'Failed to update status');
+  } finally {
+    setStatusLoadingId(null);
+  }
+};
+
   return (
     <div className="w-full min-h-screen">
-      {loading ? <Loading /> : (
+      {loading ? < FullScreenLoader message="Loading product list..."/> : (
         <>
         <div className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
@@ -210,8 +266,27 @@ const openUpdateModal = (product) => {
           <td className="p-2 sm:p-3 text-gray-600">₹{product.offerPrice}</td>
           <td className="p-2 sm:p-3 font-medium text-gray-800">{product.unitsSold}</td>
           <td className="p-2 sm:p-3">
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-              Active
+            <button
+              type="button"
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                product.status === 'active' ? 'bg-green-500' : 'bg-red-200'
+              }`}
+              onClick={() => handleStatusToggle(product)}
+              disabled={statusLoadingId === product._id}
+              aria-pressed={product.status === 'active'}
+            >
+              <span
+                className={`inline-block w-5 h-5 transform bg-white rounded-full shadow transition-transform ${
+                  product.status === 'active' ? 'translate-x-5' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span
+              className={`ml-2 text-xs font-semibold ${
+                product.status === 'active' ? 'text-green-700' : 'text-red-600'
+              }`}
+            >
+              {product.status === 'active' ? 'Active' : 'Inactive'}
             </span>
           </td>
           <td className="hidden sm:table-cell p-2 sm:p-3 text-gray-600">

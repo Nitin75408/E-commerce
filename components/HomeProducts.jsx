@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import ProductCard from "./ProductCard";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,7 @@ const HomeProducts = () => {
   const STALE_TIME = 60 * 1000; // 1 minute - same as all-products page
  const { items: products, status, hasFetched, lastFetched } = useSelector((state) => state.products);
   const loading = status === 'loading';
-  const [reviewSummaries, setReviewSummaries] = React.useState({});
+  const [reviewSummaries, setReviewSummaries] = useState({});
   
   console.log('HomeProducts - products:', products?.length);
   console.log('HomeProducts - hasFetched:', hasFetched);
