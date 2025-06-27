@@ -154,14 +154,6 @@ export const notifyUsersOnProductActivated = inngest.createFunction(
     
       return {
         message: "Notifications sent.",
-        notifiedUserIds: notifyEntries.map(e => e.userId),
-        notifyEntriesCount: notifyEntries.length,
-        productId,
-        baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
-        clerkKey: process.env.CLERK_SECRET_KEY,
-        mongoUri: process.env.MONGODB_URI,
-        resend: process.env.RESEND_API_KEY,
-        debug
       };
     }
   );

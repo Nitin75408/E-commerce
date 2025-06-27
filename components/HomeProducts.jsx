@@ -12,10 +12,7 @@ const HomeProducts = () => {
  const { items: products, status, hasFetched, lastFetched } = useSelector((state) => state.products);
   const loading = status === 'loading';
   const [reviewSummaries, setReviewSummaries] = useState({});
-  
-  console.log('HomeProducts - products:', products?.length);
-  console.log('HomeProducts - hasFetched:', hasFetched);
-      console.log(lastFetched,STALE_TIME);
+
    
   
    // Fetch products if not already fetched, or if cache is stale, or if products are empty
@@ -24,7 +21,7 @@ const HomeProducts = () => {
  const isStale = !lastFetched || (now - lastFetched > STALE_TIME);
     
     if (!hasFetched || isStale || !products || products.length === 0) {
-      console.log('HomeProducts - Fetching products... (cache stale or not fetched)');
+     
       dispatch(fetchProducts());
     }
   }, [dispatch, hasFetched, lastFetched, products]);
