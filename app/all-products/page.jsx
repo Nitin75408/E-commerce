@@ -114,7 +114,7 @@ const AllProducts = () => {
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-						{products.map((product) => (
+						{products.filter(p => p && p._id).map((product) => (
 							<ProductCard
 								key={product._id}
 								product={product}
@@ -149,3 +149,4 @@ const AllProducts = () => {
 };
 
 export default AllProducts;
+

@@ -152,6 +152,9 @@ export const createUserOrder = inngest.createFunction(
         }
       }
   
-      return { message: "Notifications sent." };
+      return {  message: "Notifications sent.",
+        productId,
+        notifyEntriesCount: notifyEntries.length,
+        notifiedUserIds: notifyEntries.map(e => e.userId), };
     }
   );
