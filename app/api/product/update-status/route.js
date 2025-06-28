@@ -1,6 +1,7 @@
 import connectDB from '@/config/db';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { inngest } from '@/config/inngest';
 
 export async function PUT(request) {
@@ -12,22 +13,24 @@ export async function PUT(request) {
 
     await connectDB();
     const updatedProduct = await Product.findByIdAndUpdate(
-         {_id:productId},
-        { status } ,
-        { new: true }
-      );
-      
-
-      console.log('Updated product:', updatedProduct);
+      new mongoose.Types.ObjectId(productId),
+      { status },
+      { new: true }
+    );
 
     if (!updatedProduct) {
       return NextResponse.json({ success: false, message: 'Product not found.' }, { status: 404 });
     }
 
-     // Trigger Inngest event if product is now active
+    // Trigger Inngest event based on product status
     if (updatedProduct.status === 'active') {
       await inngest.send({
         name: 'product.activated',
+        data: { productId: updatedProduct._id.toString() }
+      });
+    } else if (updatedProduct.status === 'inactive') {
+      await inngest.send({
+        name: 'product.deactivated',
         data: { productId: updatedProduct._id.toString() }
       });
     }

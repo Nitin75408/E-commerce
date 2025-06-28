@@ -157,3 +157,26 @@ export const notifyUsersOnProductActivated = inngest.createFunction(
       };
     }
   );
+
+  // Function to reset notified flag when product becomes inactive
+export const resetNotificationsOnProductDeactivated = inngest.createFunction(
+    { id: "reset-notifications-on-product-deactivated" },
+    { event: "product.deactivated" },
+    async ({ event }) => {
+      const { productId } = event.data;
+      await connectDB();
+    
+      // Reset all notified flags to false for this product
+      const result = await NotifyMe.updateMany(
+        { productId },
+        { $set: { notified: false } }
+      );
+    
+      return {
+        message: "Notifications reset for product deactivation.",
+        productId,
+        resetCount: result.modifiedCount,
+        totalEntries: result.matchedCount
+      };
+    }
+  );
