@@ -3,7 +3,7 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const Banner = () => {
+const Banner = React.memo(() => {
   const router = useRouter();
   return (
     <div className="flex flex-col md:flex-row items-center justify-between md:pl-20 py-14 md:py-0 bg-[#E6E9F2] my-16 rounded-xl overflow-hidden">
@@ -39,6 +39,9 @@ const Banner = () => {
       />
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+Banner.displayName = 'Banner';
 
 export default Banner;

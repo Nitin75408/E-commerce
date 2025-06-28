@@ -3,7 +3,7 @@ import React, { useEffect,useState } from "react";
 import { assets, productsDummyData } from "@/assets/assets";
 import Image from "next/image";
 import Footer from "@/components/seller/Footer";
-import FullScreenLoader from "@/components/FullScreenLoader";
+import SellerProductTableSkeleton from "@/components/seller/SellerProductTableSkeleton";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
@@ -24,14 +24,16 @@ const ProductList = () => {
    
    // Get seller products and all products from Redux at the top
    const { sellerItems: products, sellerStatus: status, sellerHasFetched: hasFetched, sellerTotalPages: totalPages, currentPage, items: allProducts } = useSelector((state) => state.products);
-   const loading = status === 'loading';
+
    
    const isSeller = useSelector((state)=>state.user.isSeller);
    const { isLoaded  } = useUser();
    const [statusLoadingId, setStatusLoadingId] = useState(null);
+   const [loading, setLoading] = useState(true);
 
 const fetchSellerProduct = async (page = 1) => {
   try {
+    setLoading(true);
     if (!isLoaded || !user || !isSeller) return;
 
     const token = await getToken();
@@ -56,6 +58,8 @@ const fetchSellerProduct = async (page = 1) => {
     }
   } catch (error) {
     toast.error(error.message || "Something went wrong.");
+  }finally{
+    setLoading(false);
   }
 };
 
@@ -65,7 +69,9 @@ useEffect(() => {
 
 const handleDelete = async (productId) => {
   if (window.confirm("Are you sure you want to delete this product?")) {
+    setLoading(true);
     try {
+      setLoading(true);
       const token = await getToken();
       const { data } = await axios.delete("/api/product/delete", {
         headers: { Authorization: `Bearer ${token}` },
@@ -83,6 +89,8 @@ const handleDelete = async (productId) => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred.");
+    }finally{
+      setLoading(false);
     }
   }
 };
@@ -104,6 +112,7 @@ const handleUpdate = async (productId, updatedData, imageFiles) => {
   }
 
   try {
+    setLoading(true);
     const token = await getToken();
     const { data } = await axios.put('/api/product/update', formData, {
       headers: { 
@@ -139,6 +148,8 @@ const handleUpdate = async (productId, updatedData, imageFiles) => {
     }
   } catch (error) {
     toast.error(error.response?.data?.message || "An error occurred.");
+  }finally{
+    setLoading(false);
   }
 };
 
@@ -199,13 +210,14 @@ const handleStatusToggle = async (product) => {
     }));
     toast.error(error.message || 'Failed to update status');
   } finally {
+    
     setStatusLoadingId(null);
   }
 };
 
   return (
     <div className="w-full min-h-screen">
-      {loading ? < FullScreenLoader message="Loading product list..."/> : (
+      {loading ? <SellerProductTableSkeleton /> : (
         <>
         <div className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">

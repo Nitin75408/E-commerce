@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { selectCartCount, selectCartAmount } from "@/app/redux/selectors/cartselecters";
+import { selectAllProducts } from "@/app/redux/selectors/productSelectors";
 import { setCartItem } from "@/app/redux/slices/CartSlice";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,9 +15,11 @@ import FullScreenLoader from "./FullScreenLoader";
 const OrderSummary = () => {
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
   const router = useRouter();
-  const products = useSelector((state) => state.products.items);
+  
+  // Using memoized selectors for better performance
+  const products = useSelector(selectAllProducts);
   const getCartCount = useSelector(selectCartCount);
-  const getCartAmount = useSelector((state) => selectCartAmount(state, products));
+  const getCartAmount = useSelector(selectCartAmount);
   const cartItems = useSelector((state) => state.cart.items);
 
   const dispatch = useDispatch();
@@ -60,7 +63,7 @@ const OrderSummary = () => {
   };
 
  
-    const createOrder = async () => {
+  const createOrder = async () => {
     if (isPlacingOrder) return;
   
     setIsPlacingOrder(true);

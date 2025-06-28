@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import FullScreenLoader from "@/components/FullScreenLoader";
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addToCart, updateCartQuantity } from "@/app/redux/slices/CartSlice";
@@ -16,6 +15,7 @@ import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import ReviewSection from "@/components/ReviewSection";
 import axios from 'axios';
+import ProductDetailSkeleton from "@/components/ProductDetailSkeleton";
 
 const Product = () => {
   const { id } = useParams();
@@ -34,6 +34,7 @@ const Product = () => {
   const [reviewSummary, setReviewSummary] = useState(null);
   const [notifyLoading, setNotifyLoading] = useState(false);
   const [notifySuccess, setNotifySuccess] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,31 +44,40 @@ const Product = () => {
     return () => clearTimeout(timer);
   }, [rawCartData]);
 
-  // Smart cache: if product not found in Redux, fetch from API
   useEffect(() => {
+    let isMounted = true;
     const fetchProduct = async () => {
       setLoadingProduct(true);
-      // Try Redux first
-      let product = products.find((product) => product._id === id);
-      if (!product) {
-        // Fallback: fetch from API
-        try {
-          const res = await fetch(`/api/product/list?id=${id}`);
-          const data = await res.json();
-          if (data.success && data.products && data.products.length > 0) {
-            product = data.products[0];
-            // Optionally, add to Redux for future
-            dispatch(setProducts([...products, product]));
-          }
-        } catch (err) {
-          // ignore, will show loading
+      try {
+        const res = await fetch(`/api/product/list?id=${id}`);
+        const data = await res.json();
+        if (data.success && data.products && data.products.length > 0) {
+          if (isMounted) setProductData(data.products[0]);
+        } else {
+          if (isMounted) setProductData(null);
         }
+      } catch (err) {
+        if (isMounted) setProductData(null);
+      } finally {
+        if (isMounted) setLoadingProduct(false);
       }
-      setProductData(product || null);
-      setLoadingProduct(false);
     };
+
     fetchProduct();
-  }, [id, products, dispatch]);
+
+    // Refetch on tab focus
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProduct();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -163,7 +173,7 @@ const Product = () => {
   };
 
   if (loadingProduct || !productData) {
-    return < FullScreenLoader message=" Loading product details..."/>;
+    return <ProductDetailSkeleton />;
   }
 
   return productData ? (
@@ -303,9 +313,8 @@ const Product = () => {
       <Footer />
     </>
   ) : (
-    < FullScreenLoader message=" Loading product details..."/>
+    <ProductDetailSkeleton />
   );
 };
 
 export default Product;
-

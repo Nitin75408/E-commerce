@@ -1,8 +1,6 @@
-
 import React from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 
 const products = [
   {
@@ -25,8 +23,7 @@ const products = [
   },
 ];
 
-const FeaturedProduct = () => {
-  const router = useRouter();
+const FeaturedProduct = React.memo(() => {
   return (
     <div className="mt-14">
       <div className="flex flex-col items-center">
@@ -47,7 +44,7 @@ const FeaturedProduct = () => {
               <p className="text-sm lg:text-base leading-5 max-w-60">
                 {description}
               </p>
-              <button  onClick={()=>router.push('/all-products')} className="flex items-center gap-1.5 bg-orange-600 px-4 py-2 rounded">
+              <button className="flex items-center gap-1.5 bg-orange-600 px-4 py-2 rounded">
                 Buy now <Image className="h-3 w-3" src={assets.redirect_icon} alt="Redirect Icon" />
               </button>
             </div>
@@ -56,6 +53,9 @@ const FeaturedProduct = () => {
       </div>
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+FeaturedProduct.displayName = 'FeaturedProduct';
 
 export default FeaturedProduct;

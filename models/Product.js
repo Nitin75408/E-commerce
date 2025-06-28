@@ -14,6 +14,12 @@ const ProductSchema = new mongoose.Schema({
 })
 
 
+ProductSchema.index({ userId: 1 });
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ status: 1 });
+ProductSchema.index({ date: -1 });
+
+
 
 const Product = mongoose.models.product || mongoose.model('product',ProductSchema)
 export default Product;

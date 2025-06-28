@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Footer from "@/components/seller/Footer";
-import FullScreenLoader from "@/components/FullScreenLoader";
+import Loading from "@/components/Loading";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
+import OrderCardSkeleton from '@/components/OrderCardSkeleton';
 
 const PAGE_SIZE = 10;
 
@@ -82,7 +83,9 @@ const Orders = () => {
   return (
     <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">
       {loading ? (
-        <FullScreenLoader message="Loading order list..." />
+        <div className="mt-8">
+          {Array.from({ length: 4 }).map((_, i) => <OrderCardSkeleton key={i} />)}
+        </div>
       ) : error ? (
         <div className="md:p-10 p-4">
           <h2 className="text-lg font-medium">Orders</h2>

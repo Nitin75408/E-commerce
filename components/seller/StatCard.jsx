@@ -15,7 +15,7 @@ import React from 'react';
  * @param {string|number} percentageChange - The percentage change to display.
  * @param {'positive'|'negative'} changeType - Determines the color of the change indicator.
  */
-const StatCard = ({ title, value, icon, percentageChange, changeType }) => {
+const StatCard = React.memo(({ title, value, icon, percentageChange, changeType }) => {
   return (
     <div className='bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start gap-4'>
       {/* Icon */}
@@ -45,6 +45,9 @@ const StatCard = ({ title, value, icon, percentageChange, changeType }) => {
       </div>
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+StatCard.displayName = 'StatCard';
 
 export default StatCard; 

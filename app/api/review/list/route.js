@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from "@/config/db";
 import Review from '@/models/Review';
-import { User } from "@/models/user";
 
 export async function GET(request) {
   try {
@@ -14,21 +13,34 @@ export async function GET(request) {
 
     await connectDB();
 
-    const reviews = await Review.find({ product: productId }).sort({ createdAt: -1 });
-
-    // Get user information for each review
-    const reviewsWithUser = await Promise.all(
-      reviews.map(async (review) => {
-        const user = await User.findById(review.userId);
-        return {
-          ...review.toObject(),
-          user: {
-            name: user ? user.name : 'Unknown User',
-            image: user ? user.imageUrl : '/default-avatar.png'
-          }
-        };
-      })
-    );
+    const reviewsWithUser = await Review.aggregate([
+      { $match: { product: productId } },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          product: 1,
+          userId: 1,
+          rating: 1,
+          title: 1,
+          description: 1,
+          images: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          "user.name": 1,
+          "user.imageUrl": 1
+        }
+      }
+    ]);
 
     return NextResponse.json({ 
       success: true, 

@@ -55,6 +55,22 @@ export const fetchSellerProducts = createAsyncThunk(
   }
 );
 
+const initialState = {
+  items: [], // All products (for home page, all-products page)
+  sellerItems: [], // Seller's products only
+  hasFetched: false,
+  sellerHasFetched: false,
+  status: 'idle',
+  sellerStatus: 'idle',
+  error: null,
+  sellerError: null,
+  totalPages: 1,
+  sellerTotalPages: 1,
+  currentPage: 1,
+  lastFetched: null,
+   
+};
+
 const productSlice = createSlice({
   name: 'products',
   initialState: {
@@ -111,6 +127,7 @@ const productSlice = createSlice({
     resetLastFetched: (state) => {
       state.lastFetched = null;
     },
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -172,6 +189,6 @@ const productSlice = createSlice({
   },
 });
 
-export const { setProducts, setSellerProducts, removeProduct, clearProducts, clearSellerProducts, resetLastFetched } = productSlice.actions;
+export const { setProducts, setSellerProducts, removeProduct, clearProducts, clearSellerProducts, resetLastFetched, reset } = productSlice.actions;
 export default productSlice.reducer;
 

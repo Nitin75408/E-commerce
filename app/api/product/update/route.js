@@ -1,6 +1,7 @@
 import connectDB from "@/config/db";
 import authSeller from "@/lib/authSeller";
 import Product from "@/models/Product";
+import Order from "@/models/Order";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from 'cloudinary';
@@ -56,9 +57,37 @@ export async function PUT(request) {
             updatedData.image = imageUrls.filter(url => url); // Filter out any potential nulls
         }
 
-        const updatedProduct = await Product.findByIdAndUpdate(productId, updatedData, { new: true });
+        // Preserve existing fields that shouldn't be overwritten
+        const finalUpdateData = {
+            ...updatedData,
+            status: product.status, // Preserve existing status
+            date: product.date, // Preserve existing date
+            userId: product.userId // Preserve existing userId
+        };
 
-        return NextResponse.json({ success: true, message: 'Product updated successfully', product: updatedProduct });
+        const updatedProduct = await Product.findByIdAndUpdate(productId, finalUpdateData, { new: true });
+
+        // Recalculate unitsSold from orders
+        const salesData = await Order.aggregate([
+            { $unwind: '$items' },
+            { $match: { 'items.product': productId.toString() } },
+            { 
+                $group: {
+                    _id: '$items.product',
+                    unitsSold: { $sum: '$items.quantity' }
+                }
+            }
+        ]);
+
+        const unitsSold = salesData.length > 0 ? salesData[0].unitsSold : 0;
+
+        // Return the updated product with recalculated unitsSold
+        const productWithSales = {
+            ...updatedProduct.toObject(),
+            unitsSold: unitsSold
+        };
+
+        return NextResponse.json({ success: true, message: 'Product updated successfully', product: productWithSales });
 
     } catch (error) {
         console.error("Error updating product:", error);

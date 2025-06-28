@@ -4,7 +4,8 @@ import { assets } from '@/assets/assets';
 import OrderSummary from '@/components/OrderSummary';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
-import { selectCartCount } from '@/app/redux/selectors/cartselecters';
+import { selectCartCount, selectCartAmount, selectCartItemsArray } from '@/app/redux/selectors/cartselecters';
+import { selectAllProducts } from '@/app/redux/selectors/productSelectors';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateCartQuantity, fetchCartData, setCartItem } from '@/app/redux/slices/CartSlice';
 import { useRouter } from 'next/navigation';
@@ -20,9 +21,12 @@ const Cart = () => {
   const dispatch = useDispatch();
   const { getToken } = useAuth();
 
-  const products = useSelector(state => state.products.items || []);
+  // Using memoized selectors for better performance
+  const products = useSelector(selectAllProducts);
   const cartItems = useSelector(state => state.cart.items || {});
   const getCartCount = useSelector(selectCartCount);
+  const cartAmount = useSelector(selectCartAmount);
+  const cartItemsArray = useSelector(selectCartItemsArray);
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
   const hasFetched = useSelector(state => state.cart.hasFetched);
 const deletedToastProductsRef = useRef(new Set());

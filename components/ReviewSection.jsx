@@ -66,7 +66,10 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, onReviewUpdated, 
     <div className="border-t py-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center">
-          <Image src={review.user.image} alt={review.user.name} width={32} height={32} className="rounded-full" />
+        {review.user?.imageUrl
+  ? <Image src={review.user.imageUrl} alt={review.user.name} width={40} height={40} className='rounded-full' />
+  : <Image src="/default-avatar.png" alt="Default avatar" width={40} height={40} className='rounded-full' />
+}
           <div className="ml-3">
             <p className="font-semibold">{review.user.name}</p>
             <div className="flex items-center text-sm text-gray-500">
@@ -137,6 +140,7 @@ const ReviewSection = ({ productId }) => {
       try {
         const { data } = await axios.get(`/api/review/list?productId=${productId}`);
         if (data.success) {
+          console.log('data.reviews', data.reviews);
           setReviews(data.reviews);
         }
       } catch (error) {

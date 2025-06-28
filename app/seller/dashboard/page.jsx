@@ -6,7 +6,7 @@ import WeeklySalesChart from '@/components/seller/WeeklySalesChart';
 import CategorySalesChart from '@/components/seller/CategorySalesChart';
 import MonthlyRevenueChart from '@/components/seller/MonthlyRevenueChart';
 import TopProductsCard from '@/components/seller/TopProductsCard';
-import FullScreenLoader from '@/components/FullScreenLoader'; // Assuming you have a loader
+import SellerDashboardSkeleton from '@/components/seller/SellerDashboardSkeleton';
 
 /**
  * SellerDashboard component
@@ -46,9 +46,9 @@ const SellerDashboard = () => {
     fetchAnalytics();
   }, []); // The empty dependency array ensures this runs only once on mount.
 
-  // While data is loading, display a full-screen loader.
+  // While data is loading, display the skeleton loader.
   if (loading) {
-    return <FullScreenLoader message="Loading dashboard..." />;
+    return <SellerDashboardSkeleton />;
   }
 
   // If data fetching fails and analyticsData is null, show an error message.

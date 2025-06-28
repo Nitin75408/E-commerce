@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
  * @param {string} topProducts[].name - The name of the product.
  * @param {string} topProducts[]._id - The unique ID of the product.
  */
-const TopProductsCard = ({ topProducts }) => {
+const TopProductsCard = React.memo(({ topProducts }) => {
   const router = useRouter();
 
   return (
@@ -58,6 +58,9 @@ const TopProductsCard = ({ topProducts }) => {
       </button>
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+TopProductsCard.displayName = 'TopProductsCard';
 
 export default TopProductsCard; 

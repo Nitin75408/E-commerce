@@ -7,7 +7,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 import { fetchProducts } from "../redux/slices/ProductSlice";
-import FullScreenLoader from "@/components/FullScreenLoader";
+import AddProductSkeleton from "@/components/seller/AddProductSkeleton";
 
 const AddProduct = () => {
   const { getToken } = useAuth();
@@ -126,7 +126,7 @@ const AddProduct = () => {
 
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
-      {loading && <FullScreenLoader message="Adding Product..." />}
+      {loading && <AddProductSkeleton />}
       <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-5 max-w-lg">
         <div>
           <p className="text-base font-medium">Product Image</p>

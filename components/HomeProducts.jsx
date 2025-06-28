@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
+import ProductCardSkeleton from "./ProductCardSkeleton";
 import axios from 'axios';
 
 const HomeProducts = () => {
@@ -49,17 +50,19 @@ const HomeProducts = () => {
     fetchProducts(nextPage);
   };
 
+  // Show skeletons if loading and no products yet
   if (loading && products.length === 0) {
     return (
       <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
-        <div className="flex justify-center items-center h-32">
-          <p className="text-gray-500">Loading products...</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
+          {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       </div>
     );
   }
 
+  // Show empty state if no products
   if (!products || products.length === 0) {
     return (
       <div className="flex flex-col items-center pt-14"> 
@@ -71,6 +74,7 @@ const HomeProducts = () => {
     );
   }
 
+  // Show products grid
   return (
     <div className="flex flex-col items-center pt-14">
       <p className="text-2xl font-medium text-left w-full">Popular products</p>
@@ -82,6 +86,10 @@ const HomeProducts = () => {
             reviewSummary={reviewSummaries[product._id]}
           />
         ))}
+        {/* Show skeletons at the end if loading more */}
+        {loading && products.length > 0 &&
+          Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={`loadmore-${i}`} />)
+        }
       </div>
       {hasMore ? (
         <button

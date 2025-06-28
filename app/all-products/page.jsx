@@ -4,10 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useState, useEffect,useRef } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
-import FullScreenLoader from "@/components/FullScreenLoader";
 import axios from 'axios';
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProducts, fetchFilteredProducts } from "@/app/redux/slices/ProductSlice";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 
 const STALE_TIME = 60 * 1000; // 1 minute
 
@@ -50,6 +50,7 @@ const AllProducts = () => {
 	// Smart cache: fetch if never fetched, or stale, or empty
 	useEffect(() => {
 		const now = Date.now();
+		console.log('Checking if products need to be fetched', { productsLength: products.length, hasFetched });
 		const isStale = !lastFetched || (now - lastFetched > STALE_TIME);
 		if (!hasFetched || isStale || !products || products.length === 0) {
 			dispatch(fetchProducts());
@@ -92,10 +93,6 @@ const AllProducts = () => {
 		}
 	}, [products]);
 
-	if (initialLoading) {
-		return <FullScreenLoader message="Loading your products..." />;
-	}
-
 	return (
 		<>
 			<Navbar />
@@ -114,13 +111,15 @@ const AllProducts = () => {
 					</div>
 					<div className="w-16 h-0.5 bg-orange-600 rounded-full mb-8"></div>
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-						{products.filter(p => p && p._id).map((product) => (
-							<ProductCard
-								key={product._id}
-								product={product}
-								reviewSummary={reviewSummaries[product._id]}
-							/>
-						))}
+						{loading
+							? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+							: products.filter(p => p && p._id).map((product) => (
+								<ProductCard
+									key={product._id}
+									product={product}
+									reviewSummary={reviewSummaries[product._id]}
+								/>
+							))}
 					</div>
 					<div className="flex justify-between items-center mt-10">
 						<button
@@ -149,4 +148,3 @@ const AllProducts = () => {
 };
 
 export default AllProducts;
-

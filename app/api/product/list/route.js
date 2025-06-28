@@ -5,7 +5,19 @@ import { NextResponse } from "next/server";
 export async function GET(request){
     try {
         const { searchParams } = new URL(request.url);
-        
+        const id = searchParams.get('id');
+
+        await connectDB();
+
+        if (id) {
+            // If id is present, fetch a single product by ID
+            const product = await Product.findById(id).lean();
+            if (!product) {
+                return NextResponse.json({ success: false, message: "Product not found", products: [] });
+            }
+            return NextResponse.json({ success: true, products: [product] });
+        }
+
         // Pagination parameters
         const page = parseInt(searchParams.get('page')) || 1;
         const limit = 10;
@@ -15,8 +27,6 @@ export async function GET(request){
         const categories = searchParams.get('categories');
         const minPrice = searchParams.get('minPrice');
         const maxPrice = searchParams.get('maxPrice');
-
-        await connectDB();
 
         // Build the filter query
         let query = {};

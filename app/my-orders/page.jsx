@@ -10,6 +10,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setRefreshOrders } from "@/app/redux/slices/userSlice";
+import OrderCardSkeleton from '@/components/OrderCardSkeleton';
 
 const PAGE_SIZE = 10;
 
@@ -83,7 +84,9 @@ const MyOrders = () => {
         <div className="space-y-5">
           <h2 className="text-lg font-medium mt-6">My Orders</h2>
           {loading ? (
-            <FullScreenLoader message="Loading Orders..." />
+            <div className="mt-8">
+              {Array.from({ length: 4 }).map((_, i) => <OrderCardSkeleton key={i} />)}
+            </div>
           ) : (
             <div className="max-w-5xl border-t border-gray-300 text-sm">
               {orders.filter(order => order.items && order.items.length > 0).map((order, index) => (
