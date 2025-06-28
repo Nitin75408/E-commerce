@@ -4,33 +4,127 @@ import axios from 'axios';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import RateProductForm from './RateProductForm';
+import EditReviewForm from './EditReviewForm';
 
 // Helper component for a single review
-const ReviewCard = ({ review }) => (
-  <div className="border-t py-4">
-    <div className="flex items-center mb-2">
-      <Image src={review.user.image} alt={review.user.name} width={32} height={32} className="rounded-full" />
-      <div className="ml-3">
-        <p className="font-semibold">{review.user.name}</p>
-        <div className="flex items-center text-sm text-gray-500">
-          {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+const ReviewCard = ({ review, currentUserId, onEdit, onDelete, onReviewUpdated, getToken }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this review?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const token = await getToken();
+      
+      const { data } = await axios.delete(`/api/review/delete?reviewId=${review._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success) {
+        toast.success('Review deleted successfully!');
+        onDelete(review._id);
+      } else {
+        toast.error(data.message || 'Failed to delete review');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'An error occurred');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleReviewUpdated = (updatedReview) => {
+    onReviewUpdated(updatedReview);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <EditReviewForm 
+        review={review} 
+        onReviewUpdated={handleReviewUpdated}
+        onCancel={handleCancelEdit}
+      />
+    );
+  }
+
+  return (
+    <div className="border-t py-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          <Image src={review.user.image} alt={review.user.name} width={32} height={32} className="rounded-full" />
+          <div className="ml-3">
+            <p className="font-semibold">{review.user.name}</p>
+            <div className="flex items-center text-sm text-gray-500">
+              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+            </div>
+          </div>
         </div>
+        
+        {/* Edit/Delete buttons for review owner */}
+        {currentUserId === review.userId && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleEdit}
+              className="text-sm text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-sm text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        )}
       </div>
+      
+      {review.title && <h4 className="font-semibold text-gray-800">{review.title}</h4>}
+      <p className="text-gray-600 mt-1">{review.description}</p>
+      
+      {review.images && review.images.length > 0 && (
+        <div className="flex gap-2 mt-2">
+          {review.images.map((img, index) => (
+            <Image 
+              key={index} 
+              src={img} 
+              alt={`review image ${index + 1}`} 
+              width={80} 
+              height={80} 
+              className="rounded-md object-cover" 
+            />
+          ))}
+        </div>
+      )}
+      
+      <p className="text-xs text-gray-400 mt-2">
+        {new Date(review.createdAt).toLocaleDateString()}
+        {review.updatedAt && review.updatedAt !== review.createdAt && (
+          <span className="ml-2">(edited)</span>
+        )}
+      </p>
     </div>
-    <h4 className="font-semibold text-gray-800">{review.title}</h4>
-    <p className="text-gray-600 mt-1">{review.description}</p>
-    {review.images && review.images.length > 0 && (
-      <div className="flex gap-2 mt-2">
-        {review.images.map(img => <Image key={img} src={img} alt="review image" width={80} height={80} className="rounded-md object-cover" />)}
-      </div>
-    )}
-    <p className="text-xs text-gray-400 mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
-  </div>
-);
+  );
+};
 
 const ReviewSection = ({ productId }) => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const { getToken } = useAuth();
   const router = useRouter();
 
@@ -58,6 +152,16 @@ const ReviewSection = ({ productId }) => {
   const handleReviewSubmitted = (newReview) => {
     setReviews(prev => [newReview, ...prev]);
     setShowReviewForm(false);
+  };
+
+  const handleReviewUpdated = (updatedReview) => {
+    setReviews(prev => prev.map(review => 
+      review._id === updatedReview._id ? updatedReview : review
+    ));
+  };
+
+  const handleReviewDeleted = (reviewId) => {
+    setReviews(prev => prev.filter(review => review._id !== reviewId));
   };
 
   const handleRateProductClick = async () => {
@@ -136,7 +240,17 @@ const ReviewSection = ({ productId }) => {
         {/* Reviews List */}
         <div className="md:col-span-2">
           {reviews.length > 0 ? (
-            reviews.map(review => <ReviewCard key={review._id} review={review} />)
+            reviews.map(review => (
+              <ReviewCard 
+                key={review._id} 
+                review={review} 
+                currentUserId={user?.id}
+                onEdit={() => {}} // Handled within ReviewCard
+                onDelete={handleReviewDeleted}
+                onReviewUpdated={handleReviewUpdated}
+                getToken={getToken}
+              />
+            ))
           ) : (
             <p>No reviews yet. Be the first to review this product!</p>
           )}

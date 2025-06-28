@@ -272,13 +272,13 @@ export const sendOrderConfirmationEmail = inngest.createFunction(
               <h3 style="margin-top: 0;">Order Summary</h3>
               <p><strong>Order Date:</strong> ${orderDate}</p>
               <p><strong>Total Items:</strong> ${totalItems}</p>
-              <p><strong>Total Amount:</strong> $${amount.toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> ₹${amount.toFixed(2)}</p>
               
               <h4>Items Ordered:</h4>
               ${productDetails.map(item => `
                 <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
                   <p style="margin: 5px 0;"><strong>${item.name}</strong></p>
-                  <p style="margin: 5px 0; color: #666;">Quantity: ${item.quantity} × $${item.price.toFixed(2)} = $${item.total.toFixed(2)}</p>
+                  <p style="margin: 5px 0; color: #666;">Quantity: ${item.quantity} × $${item.price.toFixed(2)} = ₹${item.total.toFixed(2)}</p>
                 </div>
               `).join('')}
             </div>

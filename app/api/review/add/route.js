@@ -143,4 +143,4 @@ export async function POST(request) {
         console.error('Review submission error:', error);
         return NextResponse.json({ success: false, message: error.message });
     }
-}  
+} 
