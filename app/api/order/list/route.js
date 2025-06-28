@@ -14,8 +14,16 @@ export async function GET(request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 10;
+    const skip = (page - 1) * limit;
+
     await connectDB();
-    let orders = await Order.find({ userId });
+    let orders = await Order.find({ userId })
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Filter out orders with invalid address or items.product
     orders = orders.filter(order => {
@@ -37,7 +45,17 @@ export async function GET(request) {
       })
       .filter(order => order.items.length > 0);
     
-    return NextResponse.json({ success: true, orders: filteredOrders });
+    // Get total count for pagination
+    const total = await Order.countDocuments({ userId });
+    const hasMore = skip + filteredOrders.length < total;
+
+    return NextResponse.json({ 
+      success: true, 
+      orders: filteredOrders, 
+      total, 
+      hasMore, 
+      currentPage: page 
+    });
   } catch (error) {
     console.error("Fetch orders error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

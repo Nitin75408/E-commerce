@@ -16,6 +16,11 @@ export async function GET(request) {
       return NextResponse.json({ success: false, message: "Not authorized" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 10;
+    const skip = (page - 1) * limit;
+
     await connectDB();
 
     // First, get all products created by this seller
@@ -25,7 +30,10 @@ export async function GET(request) {
     // Then, find orders that contain any of the seller's products
     let orders = await Order.find({
       'items.product': { $in: sellerProductIds }
-    });
+    })
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Filter out orders with invalid address or items.product
     orders = orders.filter(order => {
@@ -45,9 +53,19 @@ export async function GET(request) {
       })
       .filter(order => order.items.length > 0);
 
+    // Get total count for pagination
+    const total = await Order.countDocuments({ 'items.product': { $in: sellerProductIds } });
+    const hasMore = skip + filteredOrders.length < total;
+
     console.log(`Found ${filteredOrders.length} orders for seller ${userId} with ${sellerProductIds.length} products`);
 
-    return NextResponse.json({ success: true, orders: filteredOrders });
+    return NextResponse.json({ 
+      success: true, 
+      orders: filteredOrders, 
+      total, 
+      hasMore, 
+      currentPage: page 
+    });
   } catch (error) {
     console.error("Seller orders API error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

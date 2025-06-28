@@ -35,12 +35,16 @@ export async function GET(request){
             .skip(skip)
             .limit(limit)
             .lean();
-            
+        
+        const hasMore = skip + products.length < totalProducts;
+        
         return NextResponse.json({
             success: true,
             products,
+            total: totalProducts,
             totalPages,
-            currentPage: page
+            currentPage: page,
+            hasMore
         });
         
     } catch (error) {

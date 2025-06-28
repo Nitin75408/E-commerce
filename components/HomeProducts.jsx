@@ -1,51 +1,55 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
-import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
-import { fetchProducts } from "@/app/redux/slices/ProductSlice";
 import axios from 'axios';
 
 const HomeProducts = () => {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const STALE_TIME = 60 * 1000; // 1 minute - same as all-products page
- const { items: products, status, hasFetched, lastFetched } = useSelector((state) => state.products);
-  const loading = status === 'loading';
+  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [reviewSummaries, setReviewSummaries] = useState({});
 
-   
-  
-   // Fetch products if not already fetched, or if cache is stale, or if products are empty
-  useEffect(() => {
-    const now = Date.now();
- const isStale = !lastFetched || (now - lastFetched > STALE_TIME);
-    
-    if (!hasFetched || isStale || !products || products.length === 0) {
-     
-      dispatch(fetchProducts());
-    }
-  }, [dispatch, hasFetched, lastFetched, products]);
-
-  // Fetch review summaries after products are loaded
-  useEffect(() => {
-    if (products && products.length > 0) {
-      const fetchReviewSummaries = async () => {
-        try {
-          const productIds = products.map(p => p._id);
-          const { data } = await axios.post('/api/review/summary', { productIds });
-          if (data.success) {
-            setReviewSummaries(data.summary);
-          }
-        } catch (error) {
-          console.error('Failed to fetch review summaries', error);
+  // Fetch products for the current page
+  const fetchProducts = async (pageNum = 1) => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`/api/product/list?page=${pageNum}`);
+      if (data.success) {
+        if (pageNum === 1) {
+          setProducts(data.products);
+        } else {
+          setProducts(prev => [...prev, ...data.products]);
         }
-      };
-      fetchReviewSummaries();
+        setHasMore(data.hasMore);
+        // Fetch review summaries for new products
+        const productIds = data.products.map(p => p._id);
+        if (productIds.length > 0) {
+          const { data: reviewData } = await axios.post('/api/review/summary', { productIds });
+          if (reviewData.success) {
+            setReviewSummaries(prev => ({ ...prev, ...reviewData.summary }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch products', error);
+    } finally {
+      setLoading(false);
     }
-  }, [products]);
+  };
 
-  // Safety check for undefined products
-  if (loading) {
+  // Initial fetch
+  useEffect(() => {
+    fetchProducts(1);
+  }, []);
+
+  // Load more handler
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage);
+  };
+
+  if (loading && products.length === 0) {
     return (
       <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
@@ -73,18 +77,25 @@ const HomeProducts = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-6 pb-14 w-full">
         {products.map((product, index) => (
           <ProductCard
-            key={index}
+            key={product._id || index}
             product={product}
             reviewSummary={reviewSummaries[product._id]}
           />
         ))}
       </div>
-      <button onClick={() => { router.push('/all-products') }} className="px-12 py-2.5 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
-        See more
-      </button>
+      {hasMore ? (
+        <button
+          onClick={handleLoadMore}
+          className="px-12 py-2.5 border rounded text-gray-500/70 hover:bg-slate-50/90 transition mt-4"
+          disabled={loading}
+        >
+          {loading ? 'Loading...' : 'Load More'}
+        </button>
+      ) : (
+        <p className="text-gray-400 mt-4">No more products to load.</p>
+      )}
     </div>
   );
 };
 
 export default HomeProducts;
-
