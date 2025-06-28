@@ -92,7 +92,7 @@ const AllProducts = () => {
 		}
 	}, [products]);
 
-	if (initialLoading || loading) {
+	if (initialLoading) {
 		return <FullScreenLoader message="Loading your products..." />;
 	}
 
