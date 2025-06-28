@@ -1,5 +1,7 @@
 import { serve } from "inngest/next";
-import { createUserOrder, inngest, syncUserCreation, syncUserDeletion, syncUserUpdation , notifyUsersOnProductActivated,resetNotificationsOnProductDeactivated }  from "@/config/inngest"
+import { createUserOrder, inngest, syncUserCreation, syncUserDeletion, syncUserUpdation, notifyUsersOnProductActivated
+  ,cleanupOldData,sendOrderConfirmationEmail,notifySellerAboutReview
+ }  from "@/config/inngest"
 
 // Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
@@ -9,7 +11,9 @@ export const { GET, POST, PUT } = serve({
      syncUserDeletion,
      syncUserUpdation,
      createUserOrder,
-      notifyUsersOnProductActivated,
-      resetNotificationsOnProductDeactivated
+     notifyUsersOnProductActivated,
+     cleanupOldData,
+     sendOrderConfirmationEmail,
+     notifySellerAboutReview
   ],
-});
+}); 

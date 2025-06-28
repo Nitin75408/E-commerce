@@ -5,6 +5,7 @@ import Order from "@/models/Order";
 import { User } from "@/models/user";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
+import { inngest } from "@/config/inngest";
 
 // configure Cloudinary
 cloudinary.config({
@@ -111,6 +112,18 @@ export async function POST(request) {
             images
         });
 
+        // Trigger Inngest event for seller notification
+        await inngest.send({
+            name: "review/added",
+            data: {
+                reviewId: newReview._id.toString(),
+                productId: product,
+                userId: userId,
+                rating: Number(rating),
+                comment: description
+            }
+        });
+
         // Get user info for response
         const user = await User.findById(userId);
         const reviewWithUser = {
@@ -130,4 +143,4 @@ export async function POST(request) {
         console.error('Review submission error:', error);
         return NextResponse.json({ success: false, message: error.message });
     }
-} 
+}  

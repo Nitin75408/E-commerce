@@ -71,9 +71,21 @@ export async function POST(request) {
     const amount = prices.reduce((acc, curr) => acc + curr, 0);
     const totalAmount = amount + Math.floor(amount * 0.02); // e.g., 2% fee
 
-    // ✅ Trigger Inngest
+    // ✅ Trigger Inngest events
     await inngest.send({
       name: "order/created",
+      data: {
+        userId,
+        address,
+        items,
+        amount: totalAmount,
+        date: Date.now(),
+      },
+    });
+
+    // ✅ Trigger order confirmation email
+    await inngest.send({
+      name: "order.confirmation",
       data: {
         userId,
         address,
@@ -97,3 +109,4 @@ export async function POST(request) {
     return NextResponse.json({ success: false, message: error.message });
   }
 }
+
