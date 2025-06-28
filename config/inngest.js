@@ -158,7 +158,7 @@ export const notifyUsersOnProductActivated = inngest.createFunction(
                 <h3 style="margin-top: 0;">${product.name}</h3>
                 <p style="color: #666;">${product.description?.substring(0, 100)}${product.description?.length > 100 ? '...' : ''}</p>
                 <p style="font-size: 18px; font-weight: bold; color: #28a745;">
-                  Price: $${product.offerPrice || product.price}
+                  Price: ₹${product.offerPrice || product.price}
                 </p>
               </div>
               
