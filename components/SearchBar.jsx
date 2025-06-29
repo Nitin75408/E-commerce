@@ -38,8 +38,8 @@ const SearchBar = () => {
         setLoading(false);
         return;
       }
-      // Make GET request to the search API with query only
-      const res = await axios.get(`/api/product/search?q=${q}`);
+      // Make GET request to the search API with query and limit
+      const res = await axios.get(`/api/product/search?q=${q}&limit=5`);
       setResults(res.data); // Store results
       setNoResults(res.data.length === 0); // Show 'No results' if empty
     } catch (err) {

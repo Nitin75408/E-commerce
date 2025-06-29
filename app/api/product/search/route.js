@@ -10,6 +10,7 @@ export async function GET(req) {
   // 2. Parse query parameters from the request URL
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || ""; // The search keyword
+  const limit = parseInt(searchParams.get("limit")) || 10;
 
   // 3. Build the MongoDB query object
   //    - $or: matches if the keyword appears in name, brand, or description (case-insensitive, partial match)
@@ -22,8 +23,17 @@ export async function GET(req) {
   };
 
   try {
-    // 4. Query the Product collection in MongoDB
-    const products = await Product.find(query);
+    // 4. Query the Product collection in MongoDB, limit results, sort by relevance (name match first)
+    const products = await Product.find(query)
+      .sort({
+        // Prioritize name matches, then brand, then description
+        name: { $regex: q, $options: "i" } ? -1 : 0,
+        brand: { $regex: q, $options: "i" } ? -1 : 0,
+        // fallback: newest first
+        date: -1,
+      })
+      .limit(limit)
+      .lean();
     // 5. Return the matching products as JSON
     return NextResponse.json(products);
   } catch (error) {
