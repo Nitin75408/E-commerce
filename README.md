@@ -4,7 +4,7 @@ A full-stack e-commerce platform built with Next.js, featuring a comprehensive s
 
 ## 🚀 Live Demo
 
-[Add your live demo link here]
+https://e-commerce-lovat-ten-78.vercel.app/
 
 ## ✨ Features
 
