@@ -28,7 +28,12 @@ async function fetchProductAndReview(id) {
       reviewCount: summary[0].reviewCount,
     };
   }
-  return { product, reviewSummary };
+  // Convert _id to string and ensure plain object
+  const plainProduct = {
+    ...product,
+    _id: product._id.toString(),
+  };
+  return { product: plainProduct, reviewSummary };
 }
 
 export async function generateStaticParams() {
