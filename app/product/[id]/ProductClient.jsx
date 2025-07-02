@@ -111,13 +111,9 @@ const ProductClient = ({ productData, reviewSummary }) => {
     }
   };
 
-  // Responsive image size
+  // Responsive image size (fixed for all screens now)
   let mainImgSize = 400;
-  if (windowWidth < 1024) mainImgSize = 280;
-  if (windowWidth < 640) mainImgSize = 180;
   let thumbSize = 48;
-  if (windowWidth < 1024) thumbSize = 36;
-  if (windowWidth < 640) thumbSize = 28;
 
   if (!productData) {
     return <ProductDetailSkeleton />;
@@ -160,7 +156,7 @@ const ProductClient = ({ productData, reviewSummary }) => {
           </div>
           {/* Product info */}
           <div className="w-full mt-6 lg:mt-0 flex-1">
-            <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
+            <h1 className="text-lg md:text-xl lg:text-3xl font-medium text-gray-800/90 mb-4">
               {productData.name}
             </h1>
             {reviewSummary && reviewSummary.reviewCount > 0 && (
@@ -169,15 +165,15 @@ const ProductClient = ({ productData, reviewSummary }) => {
                   {reviewSummary.avgRating}
                   <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" style={{ filter: 'brightness(0) invert(1)' }} />
                 </span>
-                <span className="text-base text-gray-600 font-medium">
+                <span className="text-xs md:text-base text-gray-600 font-medium">
                   {reviewSummary.reviewCount} Ratings & {reviewSummary.reviewCount} Reviews
                 </span>
               </div>
             )}
-            <p className="text-gray-600 mt-3">{productData.description}</p>
-            <p className="text-3xl font-medium mt-6">
+            <p className="text-xs md:text-sm lg:text-base text-gray-600 mt-3">{productData.description}</p>
+            <p className="text-xl md:text-2xl lg:text-3xl font-medium mt-6">
               {currency}{productData.offerPrice}
-              <span className="text-base font-normal text-gray-800/60 line-through ml-2">
+              <span className="text-xs md:text-base font-normal text-gray-800/60 line-through ml-2">
                 {currency}{productData.price}
               </span>
             </p>
