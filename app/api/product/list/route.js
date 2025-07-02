@@ -20,7 +20,7 @@ export async function GET(request) {
 
     // ✅ Pagination params
     const page = parseInt(searchParams.get("page")) || 1;
-    const limit = parseInt(searchParams.get("limit")) || 5; // ✅ Accept dynamic limit
+    const limit = parseInt(searchParams.get("limit")) || 10; // ✅ Accept dynamic limit
     const skip = (page - 1) * limit;
 
     // ✅ Filter params

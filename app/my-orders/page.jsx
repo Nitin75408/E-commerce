@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setRefreshOrders } from "@/app/redux/slices/userSlice";
 import OrderCardSkeleton from '@/components/OrderCardSkeleton';
 
-const FALLBACK_PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
 
 const MyOrders = () => {
      const currency = process.env.NEXT_PUBLIC_CURRENCY; 
@@ -22,8 +22,6 @@ const MyOrders = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [pageSize, setPageSize] = useState(FALLBACK_PAGE_SIZE);
-  const [cardHeight, setCardHeight] = useState(null);
   const { isLoaded } = useUser();
   const user = useSelector((state) => state.user.user);
     const refreshOrders = useSelector((state) => state.user.refreshOrders);
@@ -32,7 +30,7 @@ const MyOrders = () => {
     const observer = useRef();
     const firstCardRef = useRef(null);
    
-  const fetchOrders = async (pageNum = 1, append = false, customPageSize = pageSize) => {
+  const fetchOrders = async (pageNum = 1, append = false, customPageSize = PAGE_SIZE) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
   try {
@@ -76,25 +74,6 @@ useEffect(() => {
   }
 }, [refreshOrders]);
 
-// Measure the first card's height after orders are loaded
-useEffect(() => {
-  if (firstCardRef.current && !cardHeight) {
-    setCardHeight(firstCardRef.current.offsetHeight);
-  }
-}, [orders, loading]);
-
-// Calculate page size based on card height
-useEffect(() => {
-  if (cardHeight) {
-    const availableHeight = window.innerHeight - 200; // adjust for header/footer if needed
-    const calculatedPageSize = Math.max(1, Math.floor(availableHeight / cardHeight));
-    setPageSize(calculatedPageSize);
-    // If this is the first load, refetch with the correct page size
-    if (orders.length > 0 && orders.length !== calculatedPageSize && page === 1) {
-      fetchOrders(1, false, calculatedPageSize);
-    }
-  }
-}, [cardHeight]);
 
 // Infinite scroll: observe sentinel
 useEffect(() => {
@@ -115,8 +94,8 @@ useEffect(() => {
 // Fetch next page when page changes (but not on initial mount)
 useEffect(() => {
   if (page === 1) return;
-  fetchOrders(page, true, pageSize);
-}, [page, pageSize]);
+  fetchOrders(page, true, PAGE_SIZE);
+}, [page]);
 
   return (
         <>
@@ -126,7 +105,7 @@ useEffect(() => {
                     <h2 className="text-lg font-medium mt-6">My Orders</h2>
           {loading ? (
             <div className="mt-8">
-              {Array.from({ length: pageSize }).map((_, i) => <OrderCardSkeleton key={i} />)}
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => <OrderCardSkeleton key={i} />)}
             </div>
           ) : (
             <div className="max-w-5xl border-t border-gray-300 text-sm">
@@ -172,7 +151,7 @@ useEffect(() => {
                         ))}
               {/* Show skeletons at the end if loading more */}
               {loadingMore && orders.length > 0 &&
-                Array.from({ length: pageSize }).map((_, i) => <OrderCardSkeleton key={`loadmore-${i}`} />)
+                Array.from({ length: PAGE_SIZE }).map((_, i) => <OrderCardSkeleton key={`loadmore-${i}`} />)
               }
               {/* Sentinel div for infinite scroll */}
               <div ref={sentinelRef} style={{ height: 1 }} />

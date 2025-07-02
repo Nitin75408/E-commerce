@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import OrderCardSkeleton from '@/components/OrderCardSkeleton';
 
-const FALLBACK_PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
 
 const Orders = () => {
   const currency = process.env.NEXT_PUBLIC_CURRENCY;
@@ -19,9 +19,6 @@ const Orders = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [pageSize, setPageSize] = useState(FALLBACK_PAGE_SIZE);
-  const [cardHeight, setCardHeight] = useState(null);
-  const [availableHeight, setAvailableHeight] = useState(window.innerHeight);
 
   const { getToken } = useAuth();
   const { isLoaded, user: clerkUser } = useUser();
@@ -32,7 +29,7 @@ const Orders = () => {
   const observer = useRef();
   const firstCardRef = useRef(null);
 
-  const fetchSellerOrders = async (pageNum = 1, append = false, customPageSize = pageSize) => {
+  const fetchSellerOrders = async (pageNum = 1, append = false, customPageSize = PAGE_SIZE) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
@@ -70,40 +67,7 @@ const Orders = () => {
     }
   }, [clerkUser, isSeller, isLoaded, hasFetched]);
 
-  function updateAvailableHeight() {
-    const navbar = document.querySelector('header');
-    const footer = document.querySelector('footer');
-    let total = 0;
-    if (navbar) total += navbar.offsetHeight;
-    if (footer) total += footer.offsetHeight;
-    setAvailableHeight(window.innerHeight - total);
-  }
 
-  useEffect(() => {
-    updateAvailableHeight();
-    window.addEventListener('resize', updateAvailableHeight);
-    return () => window.removeEventListener('resize', updateAvailableHeight);
-  }, []);
-
-  // Measure first card height
-  useEffect(() => {
-    const calculatePageSize = () => {
-      if (firstCardRef.current) {
-        const height = firstCardRef.current.offsetHeight;
-        const rows = Math.max(1, Math.floor(availableHeight / height));
-        if (rows !== pageSize) {
-          setCardHeight(height);
-          setPageSize(rows);
-          if (page === 1 && orders.length !== rows) {
-            fetchSellerOrders(1, false, rows);
-          }
-        }
-      }
-    };
-    calculatePageSize();
-    window.addEventListener('resize', calculatePageSize);
-    return () => window.removeEventListener('resize', calculatePageSize);
-  }, [orders.length, page]);
 
   // Infinite scroll
   useEffect(() => {
@@ -120,19 +84,13 @@ const Orders = () => {
 
   // Fetch next page
   useEffect(() => {
-    let timeout;
     if (page === 1) return;
-  
-    timeout = setTimeout(() => {
-      fetchSellerOrders(page, true, pageSize);
-    }, 200); // delay to prevent flicker
-  
-    return () => clearTimeout(timeout);
+    fetchSellerOrders(page, true, PAGE_SIZE);
   }, [page]);
 
   return (
     <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">
-      {loading && !cardHeight ? (
+      {loading ? (
         <div className="mt-8">{Array.from({ length: 4 }).map((_, i) => <OrderCardSkeleton key={i} />)}</div>
       ) : error ? (
         <div className="md:p-10 p-4">
@@ -189,7 +147,7 @@ const Orders = () => {
                 </div>
               ))}
               {loadingMore &&
-                Array.from({ length: pageSize }).map((_, i) => <OrderCardSkeleton key={`load-${i}`} />)
+                Array.from({ length: PAGE_SIZE }).map((_, i) => <OrderCardSkeleton key={`load-${i}`} />)
               }
               <div ref={sentinelRef} style={{ height: 1 }} />
               {!hasMore && orders.length > 0 && (

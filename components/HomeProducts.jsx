@@ -3,7 +3,7 @@ import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton";
 import axios from "axios";
 
-const FALLBACK_PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
 
 const HomeProducts = () => {
   const [products, setProducts] = useState([]);
@@ -12,47 +12,14 @@ const HomeProducts = () => {
   const [loading, setLoading] = useState(false);
   const [reviewSummaries, setReviewSummaries] = useState({});
   const [cardHeight, setCardHeight] = useState(null);
-  const [pageSize, setPageSize] = useState(FALLBACK_PAGE_SIZE);
   const observer = useRef();
   const sentinelRef = useRef();
   const firstCardRef = useRef(null);
-  const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
-
-  // Helper: get column count based on screen width
-  const getColumnCount = () => {
-    const width = window.innerWidth;
-    if (width >= 1280) return 5;
-    if (width >= 1024) return 4;
-    if (width >= 768) return 3;
-    return 2;
-  };
-  useEffect(() => {
-    function updateGridHeight() {
-      const navbar = document.querySelector('header');
-      const banner = document.querySelector('.banner, [data-banner]');
-      const footer = document.querySelector('footer');
-      let total = 0;
-      if (navbar) total += navbar.offsetHeight;
-      if (banner) total += banner.offsetHeight;
-      if (footer) total += footer.offsetHeight;
-      setGridHeight(window.innerHeight - total);
-    }
-    updateGridHeight();
-    window.addEventListener('resize', updateGridHeight);
-    return () => window.removeEventListener('resize', updateGridHeight);
-  }, []);
-
-  // Helper: get row count based on card height
-  const getRowCount = (cardHeight) => {
-    const availableHeight = gridHeight; // adjust for header/footer
-    return Math.max(1, Math.floor(availableHeight / cardHeight));
-  };
-
   // Fetch products
-  const fetchProducts = async (pageNum = 1, pageSizeOverride = pageSize) => {
+  const fetchProducts = async (pageNum = 1,pageSize = PAGE_SIZE) => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/product/list?page=${pageNum}&limit=${pageSizeOverride}`);
+      const { data } = await axios.get(`/api/product/list?page=${pageNum}&limit=${pageSize}`);
       if (data.success) {
         if (pageNum === 1) {
           setProducts(data.products);
@@ -88,30 +55,6 @@ const HomeProducts = () => {
     }
   }, [products, loading]);
 
-  // Recalculate page size based on card height and screen width
-  useEffect(() => {
-    const recalculatePageSize = () => {
-      if (cardHeight) {
-        const columns = getColumnCount();
-        const rows = getRowCount(cardHeight);
-        const calculatedPageSize = rows * columns;
-
-        if (calculatedPageSize !== pageSize) {
-          setPageSize(calculatedPageSize);
-          fetchProducts(1, calculatedPageSize); // Refetch with new size
-        }
-      }
-    };
-
-    recalculatePageSize();
-
-    const handleResize = () => {
-      recalculatePageSize();
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [cardHeight]);
 
   // Infinite scroll
   useEffect(() => {
@@ -144,7 +87,7 @@ const HomeProducts = () => {
       <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
-          {Array.from({ length: FALLBACK_PAGE_SIZE * 2 }).map((_, i) => (
+          {Array.from({ length: PAGE_SIZE * 2 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
         </div>
@@ -175,7 +118,7 @@ const HomeProducts = () => {
           </div>
         ))}
         {loading && products.length > 0 &&
-          Array.from({ length: pageSize }).map((_, i) => (
+          Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <ProductCardSkeleton key={`loadmore-${i}`} />
           ))}
       </div>
