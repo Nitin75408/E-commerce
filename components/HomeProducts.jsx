@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton";
-import axios from 'axios';
+import axios from "axios";
+
+const FALLBACK_PAGE_SIZE = 10;
 
 const HomeProducts = () => {
   const [products, setProducts] = useState([]);
@@ -9,30 +11,66 @@ const HomeProducts = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [reviewSummaries, setReviewSummaries] = useState({});
+  const [cardHeight, setCardHeight] = useState(null);
+  const [pageSize, setPageSize] = useState(FALLBACK_PAGE_SIZE);
+  const observer = useRef();
+  const sentinelRef = useRef();
+  const firstCardRef = useRef(null);
+  const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
 
-  // Fetch products for the current page
-  const fetchProducts = async (pageNum = 1) => {
+  // Helper: get column count based on screen width
+  const getColumnCount = () => {
+    const width = window.innerWidth;
+    if (width >= 1280) return 5;
+    if (width >= 1024) return 4;
+    if (width >= 768) return 3;
+    return 2;
+  };
+  useEffect(() => {
+    function updateGridHeight() {
+      const navbar = document.querySelector('header');
+      const banner = document.querySelector('.banner, [data-banner]');
+      const footer = document.querySelector('footer');
+      let total = 0;
+      if (navbar) total += navbar.offsetHeight;
+      if (banner) total += banner.offsetHeight;
+      if (footer) total += footer.offsetHeight;
+      setGridHeight(window.innerHeight - total);
+    }
+    updateGridHeight();
+    window.addEventListener('resize', updateGridHeight);
+    return () => window.removeEventListener('resize', updateGridHeight);
+  }, []);
+
+  // Helper: get row count based on card height
+  const getRowCount = (cardHeight) => {
+    const availableHeight = gridHeight; // adjust for header/footer
+    return Math.max(1, Math.floor(availableHeight / cardHeight));
+  };
+
+  // Fetch products
+  const fetchProducts = async (pageNum = 1, pageSizeOverride = pageSize) => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/product/list?page=${pageNum}`);
+      const { data } = await axios.get(`/api/product/list?page=${pageNum}&limit=${pageSizeOverride}`);
       if (data.success) {
         if (pageNum === 1) {
           setProducts(data.products);
         } else {
-          setProducts(prev => [...prev, ...data.products]);
+          setProducts((prev) => [...prev, ...data.products]);
         }
         setHasMore(data.hasMore);
-        // Fetch review summaries for new products
-        const productIds = data.products.map(p => p._id);
+
+        const productIds = data.products.map((p) => p._id);
         if (productIds.length > 0) {
-          const { data: reviewData } = await axios.post('/api/review/summary', { productIds });
+          const { data: reviewData } = await axios.post("/api/review/summary", { productIds });
           if (reviewData.success) {
-            setReviewSummaries(prev => ({ ...prev, ...reviewData.summary }));
+            setReviewSummaries((prev) => ({ ...prev, ...reviewData.summary }));
           }
         }
       }
     } catch (error) {
-      console.error('Failed to fetch products', error);
+      console.error("Failed to fetch products", error);
     } finally {
       setLoading(false);
     }
@@ -43,29 +81,81 @@ const HomeProducts = () => {
     fetchProducts(1);
   }, []);
 
-  // Load more handler
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchProducts(nextPage);
-  };
+  // Measure the first card's height
+  useEffect(() => {
+    if (firstCardRef.current && !cardHeight) {
+      setCardHeight(firstCardRef.current.offsetHeight);
+    }
+  }, [products, loading]);
 
-  // Show skeletons if loading and no products yet
+  // Recalculate page size based on card height and screen width
+  useEffect(() => {
+    const recalculatePageSize = () => {
+      if (cardHeight) {
+        const columns = getColumnCount();
+        const rows = getRowCount(cardHeight);
+        const calculatedPageSize = rows * columns;
+
+        if (calculatedPageSize !== pageSize) {
+          setPageSize(calculatedPageSize);
+          fetchProducts(1, calculatedPageSize); // Refetch with new size
+        }
+      }
+    };
+
+    recalculatePageSize();
+
+    const handleResize = () => {
+      recalculatePageSize();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [cardHeight]);
+
+  // Infinite scroll
+  useEffect(() => {
+    if (loading || !hasMore) return;
+
+    const currentSentinel = sentinelRef.current;
+    if (!currentSentinel) return;
+
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !loading) {
+        setPage((prev) => prev + 1);
+      }
+    });
+
+    observer.current.observe(currentSentinel);
+    return () => observer.current && observer.current.disconnect();
+  }, [loading, hasMore, products]);
+
+  // Fetch next page on scroll
+  useEffect(() => {
+    if (page === 1) return;
+    fetchProducts(page);
+  }, [page]);
+
+  // Show skeletons on initial load
   if (loading && products.length === 0) {
     return (
       <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
-          {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+          {Array.from({ length: FALLBACK_PAGE_SIZE * 2 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
   }
 
-  // Show empty state if no products
+  // No products state
   if (!products || products.length === 0) {
     return (
-      <div className="flex flex-col items-center pt-14"> 
+      <div className="flex flex-col items-center pt-14">
         <p className="text-2xl font-medium text-left w-full">Popular products</p>
         <div className="flex justify-center items-center h-32">
           <p className="text-gray-500">No products available</p>
@@ -74,36 +164,26 @@ const HomeProducts = () => {
     );
   }
 
-  // Show products grid
+  // Render products
   return (
     <div className="flex flex-col items-center pt-14">
       <p className="text-2xl font-medium text-left w-full">Popular products</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-6 pb-14 w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
         {products.map((product, index) => (
-          <ProductCard
-            key={product._id || index}
-            product={product}
-            reviewSummary={reviewSummaries[product._id]}
-          />
+          <div ref={index === 0 ? firstCardRef : null} key={product._id || index}>
+            <ProductCard product={product} reviewSummary={reviewSummaries[product._id]} />
+          </div>
         ))}
-        {/* Show skeletons at the end if loading more */}
         {loading && products.length > 0 &&
-          Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={`loadmore-${i}`} />)
-        }
+          Array.from({ length: pageSize }).map((_, i) => (
+            <ProductCardSkeleton key={`loadmore-${i}`} />
+          ))}
       </div>
-      {hasMore ? (
-        <button
-          onClick={handleLoadMore}
-          className="px-12 py-2.5 border rounded text-gray-500/70 hover:bg-slate-50/90 transition mt-4"
-          disabled={loading}
-        >
-          {loading ? 'Loading...' : 'Load More'}
-        </button>
-      ) : (
-        <p className="text-gray-400 mt-4">No more products to load.</p>
-      )}
+      <div ref={sentinelRef} style={{ height: 1 }} />
+      {!hasMore && <p className="text-gray-400 mt-4">No more products to load.</p>}
     </div>
   );
 };
 
 export default HomeProducts;
+

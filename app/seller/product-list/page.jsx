@@ -263,7 +263,7 @@ const handleStatusToggle = async (product) => {
       {products.map((product) => (
         <tr key={product._id} className="hover:bg-gray-50">
           <td className="p-2 sm:p-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ">
               <Image
                 src={product.image[0]}
                 alt={product.name}
@@ -271,7 +271,7 @@ const handleStatusToggle = async (product) => {
                 height={48}
                 className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md"
               />
-              <span className="font-medium text-gray-800">{product.name}</span>
+              <span className="font-medium text-gray-800 whitespace-normal break-words max-w-xs line-clamp-1">{product.name}</span>
             </div>
           </td>
           <td className="p-2 sm:p-3 text-gray-600">{product.category}</td>

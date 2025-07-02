@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { saveCartToDB } from "@/app/redux/api_integration/cartapi";
 import ReviewSection from "@/components/ReviewSection";
 import ProductDetailSkeleton from "@/components/ProductDetailSkeleton";
+import ImageZoom from "@/components/ImageZoom";
 
 const ProductClient = ({ productData, reviewSummary }) => {
   const dispatch = useDispatch();
@@ -110,31 +111,28 @@ const ProductClient = ({ productData, reviewSummary }) => {
   return (
     <>
       <Navbar />
-      <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
+      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 pt-14 space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-          <div className="px-5 lg:px-16 xl:px-20">
-            <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
-              <Image
-                src={mainImage || productData.image[0]}
-                alt="alt"
-                className="w-full h-auto object-cover mix-blend-multiply"
-                width={1280}
-                height={720}
-              />
-            </div>
-            <div className="grid grid-cols-4 gap-4">
+          <div className="px-5 lg:px-16 xl:px-20 flex flex-col items-start">
+            <ImageZoom
+              src={mainImage || productData.image[0]}
+              alt="Product image"
+              width={400}
+              height={400}
+              zoom={2}
+            />
+            <div className="grid grid-cols-4 gap-4 mt-4">
               {productData.image.map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image)}
-                  className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
+                  className={`cursor-pointer rounded-lg overflow-hidden border-2 ${mainImage === image ? 'border-orange-500' : 'border-transparent'}`}
+                  style={{ width: 80, height: 80 }}
                 >
-                  <Image
+                  <img
                     src={image}
-                    alt="alt"
-                    className="w-full h-auto object-cover mix-blend-multiply"
-                    width={1280}
-                    height={720}
+                    alt={`Thumbnail ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
               ))}

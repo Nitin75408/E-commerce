@@ -3,11 +3,17 @@ import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-const ProductCard = React.memo(({ product, reviewSummary }) => {
+const ProductCard = React.memo(({ product = {}, reviewSummary = {} }) => {
     const router  = useRouter();
     const currency = process.env.NEXT_PUBLIC_CURRENCY
 
-    
+    // Defensive: fallback for missing fields
+    const name = product?.name || 'Product';
+    const images = product?.image || [];
+    const image = images[0] || '/fallback-image.png'; // Use a fallback image path
+    const offerPrice = product?.offerPrice ?? product?.price ?? '';
+    const description = product?.description || '';
+    const productId = product?._id || '';
     
     // Helper to render stars based on avgRating
     const renderStars = (avgRating) => {
@@ -47,13 +53,13 @@ const ProductCard = React.memo(({ product, reviewSummary }) => {
 
     return (
         <div
-            onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}
+            onClick={() => { if (productId) { router.push('/product/' + productId); scrollTo(0, 0); } }}
             className="flex flex-col items-start gap-1 w-full cursor-pointer group"
         >
             <div className="cursor-pointer relative bg-gray-500/10 rounded-lg w-full h-48 sm:h-52 flex items-center justify-center overflow-hidden">
                 <Image
-                    src={product.image[0]}
-                    alt={product.name}
+                    src={image}
+                    alt={name}
                     className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 sm:w-full sm:h-full"
                     width={800}
                     height={800}
@@ -70,19 +76,18 @@ const ProductCard = React.memo(({ product, reviewSummary }) => {
             <div className="w-full space-y-1">
                 <p className="text-sm sm:text-base font-medium leading-tight overflow-hidden" style={{
                     display: '-webkit-box',
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 1,
                     WebkitBoxOrient: 'vertical',
-                    minHeight: '2.5rem',
                     lineHeight: '1.25rem'
                 }}>
-                    {product.name}
+                    {name}
                 </p>
                 <p className="text-xs text-gray-500/70 hidden sm:block overflow-hidden" style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical'
                 }}>
-                    {product.description}
+                    {description}
                 </p>
                 {/* Review summary: green box with avg rating and one star, then review count */}
                 {reviewSummary && reviewSummary.reviewCount > 0 && (
@@ -96,7 +101,7 @@ const ProductCard = React.memo(({ product, reviewSummary }) => {
                 )}
                 {/* End review summary */}
                 <div className="flex items-end justify-between w-full pt-1">
-                    <p className="text-sm sm:text-base font-medium">{currency}{product.offerPrice}</p>
+                    <p className="text-sm sm:text-base font-medium">{currency}{offerPrice}</p>
                     <button className="hidden sm:block px-3 py-1 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition">
                     Buy now
                 </button>

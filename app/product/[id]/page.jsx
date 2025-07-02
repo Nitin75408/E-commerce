@@ -43,7 +43,7 @@ export async function generateStaticParams() {
 }
 
 const Product = async ({ params }) => {
-  const { id } = params;
+  const { id } =  await params;
   const { product: productData, reviewSummary } = await fetchProductAndReview(id);
   return <ProductClient productData={productData} reviewSummary={reviewSummary} />;
 };
