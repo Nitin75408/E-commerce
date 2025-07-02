@@ -76,8 +76,9 @@ const ProductCard = React.memo(({ product = {}, reviewSummary = {} }) => {
             <div className="w-full space-y-1">
                 <p className="text-sm sm:text-base font-medium leading-tight overflow-hidden" style={{
                     display: '-webkit-box',
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
+                    minHeight: '2.5rem',
                     lineHeight: '1.25rem'
                 }}>
                     {name}
