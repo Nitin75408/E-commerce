@@ -123,7 +123,7 @@ const ProductClient = ({ productData, reviewSummary }) => {
     <>
       <Navbar />
       <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 md:px-8 pt-8 space-y-8">
-        <div className="flex flex-col md:flex-col lg:flex-row items-center lg:items-start">
+      <div className="flex flex-col md:flex-col lg:flex-row items-center lg:items-start gap-y-6 lg:gap-y-0">
           {/* Thumbnails and main image */}
           <div className="flex flex-col items-center mb-6 lg:mb-0">
             {/* Main image */}
@@ -155,7 +155,7 @@ const ProductClient = ({ productData, reviewSummary }) => {
             </div>
           </div>
           {/* Product info */}
-          <div className="w-full mt-6 lg:mt-0 flex-1">
+         <div className="w-full mt-6 lg:mt-0 lg:ml-8 flex-1">
             <h1 className="text-lg md:text-xl lg:text-3xl font-medium text-gray-800/90 mb-4">
               {productData.name}
             </h1>
