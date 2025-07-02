@@ -7,6 +7,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: '570px',
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -16,5 +19,7 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+   
+  ],
 };
