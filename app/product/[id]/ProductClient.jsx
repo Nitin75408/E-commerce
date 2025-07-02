@@ -246,7 +246,7 @@ const ProductClient = ({ productData, reviewSummary }) => {
               <ProductCard key={index} product={product} />
             ))}
           </div>
-          <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
+          <button onClick={()=>router.push('/all-products')} className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
             See more
           </button>
         </div>
