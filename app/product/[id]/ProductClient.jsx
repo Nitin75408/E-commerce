@@ -29,6 +29,7 @@ const ProductClient = ({ productData, reviewSummary }) => {
   const [mainImage, setMainImage] = useState(null);
   const [notifyLoading, setNotifyLoading] = useState(false);
   const [notifySuccess, setNotifySuccess] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,6 +37,12 @@ const ProductClient = ({ productData, reviewSummary }) => {
     }, 100);
     return () => clearTimeout(timer);
   }, [rawCartData]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const updateCartInDB = async (product, updatedCart) => {
     try {
@@ -104,6 +111,14 @@ const ProductClient = ({ productData, reviewSummary }) => {
     }
   };
 
+  // Responsive image size
+  let mainImgSize = 400;
+  if (windowWidth < 1024) mainImgSize = 280;
+  if (windowWidth < 640) mainImgSize = 180;
+  let thumbSize = 48;
+  if (windowWidth < 1024) thumbSize = 36;
+  if (windowWidth < 640) thumbSize = 28;
+
   if (!productData) {
     return <ProductDetailSkeleton />;
   }
@@ -111,23 +126,28 @@ const ProductClient = ({ productData, reviewSummary }) => {
   return (
     <>
       <Navbar />
-      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 pt-14 space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-          <div className="px-5 lg:px-16 xl:px-20 flex flex-col items-start">
-            <ImageZoom
-              src={mainImage || productData.image[0]}
-              alt="Product image"
-              width={400}
-              height={400}
-              zoom={2}
-            />
-            <div className="grid grid-cols-4 gap-4 mt-4">
+      <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 md:px-8 pt-8 space-y-8">
+        <div className="flex flex-col md:flex-col lg:flex-row items-center lg:items-start">
+          {/* Thumbnails and main image */}
+          <div className="flex flex-col items-center mb-6 lg:mb-0">
+            {/* Main image */}
+            <div className="flex flex-col items-center">
+              <ImageZoom
+                src={mainImage || productData.image[0]}
+                alt="Product image"
+                width={mainImgSize}
+                height={mainImgSize}
+                zoom={2}
+              />
+            </div>
+            {/* Thumbnails below main image */}
+            <div className="flex flex-row space-x-2 items-center justify-center mt-4">
               {productData.image.map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image)}
                   className={`cursor-pointer rounded-lg overflow-hidden border-2 ${mainImage === image ? 'border-orange-500' : 'border-transparent'}`}
-                  style={{ width: 80, height: 80 }}
+                  style={{ width: thumbSize, height: thumbSize }}
                 >
                   <img
                     src={image}
@@ -138,7 +158,8 @@ const ProductClient = ({ productData, reviewSummary }) => {
               ))}
             </div>
           </div>
-          <div className="flex flex-col">
+          {/* Product info */}
+          <div className="w-full mt-6 lg:mt-0 flex-1">
             <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
               {productData.name}
             </h1>
